@@ -1,9 +1,8 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  text-align: center;
-  padding: 50px;
-}
-h1 {
-  color: #333;
-}
+:root { --w: 1080px; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, Arial, sans-serif; margin: 0; line-height: 1.5; background:#f7f7f8; color:#222; }
+.container { max-width: var(--w); margin: 0 auto; padding: 20px; }
+header { background: #fff; border-bottom: 1px solid #eee; }
+h1 { margin: 0; font-size: 28px; }
+h2 { margin-top: 24px; font-size: 22px; }
+footer { margin-top: 40px; padding: 20px; color:#666; }
