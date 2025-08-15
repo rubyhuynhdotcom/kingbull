@@ -1,313 +1,212 @@
 <!DOCTYPE html>
+<!--
+  KINGBULL Việt Nam — Landing Page (Pure HTML/CSS/JS)
+  - Sticky navbar (no slogan near logo)
+  - Smooth scroll + active section highlight
+  - Hero with animated mesh gradient + parallax text
+  - Case Studies grid + Modal detail (ROI calc)
+  - Technical PDF library (filters)
+  - Video gallery
+  - Dealer Portal (mock login)
+  - Supply Map (Leaflet)
+  - 24/7 Support form
+  - Logistics calculator (distance + ETA + container trips)
+  - News (filter by tag)
+  - R&D sign-up
+  - Accessibility: focus ring, Skip link, reduced motion fallback
+-->
 <html lang="vi">
 <head>
-  <!-- ============================================================
-       KINGBULL Aquaculture Hub — Landing Page (Pure HTML/CSS/JS)
-       Phần 1/3: Head, Tokens, Global Styles, Header, Hero, Value Cards
-       ============================================================ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KINGBULL Aquaculture Hub — Aquafeed B2B</title>
-  <meta name="description" content="Landing page giới thiệu & tư vấn chuyên sâu cho KINGBULL Việt Nam (Aquafeed B2B)" />
+  <title>Công ty TNHH KINGBULL Việt Nam</title>
+  <meta name="description" content="Interactive landing page giới thiệu & tư vấn chuyên sâu cho KINGBULL Việt Nam" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y='32' font-size='32'>🐟</text></svg>">
   <link rel="preconnect" href="https://unpkg.com">
-
-  <!-- Leaflet CSS: đặt trước để tránh giật layout khi phần bản đồ load ở phần 2/3 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    /* ======================================================================
-       0) DESIGN TOKENS — Màu thương hiệu, bán kính, bóng đổ, font scale, motion
-       ====================================================================== */
+    /* ============================================================
+       0) DESIGN TOKENS
+       ============================================================ */
     :root{
-      /* Brand palette */
-      --kb-blue: #0EA4E8;     /* Primary Blue */
-      --kb-green:#2BCB53;     /* Growth Green */
-      --kb-gold: #FFBE00;     /* Profit Gold */
+      /* Brand */
+      --kb-blue:#0EA4E8;
+      --kb-green:#2BCB53;
+      --kb-gold:#FFBE00;
 
-      /* Surfaces & Text (Dark landing style giống mẫu) */
-      --bg:      #0b1220;     /* page background */
-      --panel:   #0f172a;     /* panel dark */
-      --panel-2: #0c1527;     /* panel subtle */
-      --glass:   rgba(255,255,255,.06);
-      --stroke:  rgba(255,255,255,.08);
-      --text:    #e6f0ff;     /* main text */
-      --muted:   #9fb1c9;     /* secondary text */
-      --ring:    #7ed3f7;     /* focus ring */
+      /* Text & Surfaces */
+      --text:#0b1220;
+      --text-2:#51607a;
+      --bg:#ffffff;
+      --muted:#f6f7fb;
+      --ring:#74d1f5;
 
-      /* Elevations & Radii */
-      --radius: 16px;
-      --radius-lg: 22px;
-      --shadow-1: 0 10px 30px rgba(3,10,32,.25);
-      --shadow-2: 0 22px 70px rgba(3,10,32,.38);
-      --shadow-3: 0 40px 120px rgba(3,10,32,.45);
+      /* Elevation & Borders */
+      --stroke:#e9edf4;
+      --shadow-1:0 8px 30px rgba(16,24,40,.08);
+      --shadow-2:0 16px 50px rgba(16,24,40,.10);
+      --glass:rgba(255,255,255,.65);
 
-      /* Typography */
-      --fs-hero: clamp(36px, 6.5vw, 68px);
-      --fs-h2:   clamp(22px, 3.2vw, 32px);
-      --fs-h3:   clamp(18px, 2.4vw, 22px);
-      --fs-lead: clamp(15px, 2.1vw, 18px);
-      --lh-hero: 1.05;
+      /* Typo scale */
+      --fs-hero: clamp(32px, 6vw, 56px);
+      --fs-h2: clamp(22px, 3vw, 30px);
+      --fs-lead: clamp(15px, 2.2vw, 18px);
 
       /* Motion */
-      --dur-1: .22s;
-      --dur-2: .45s;
-      --dur-3: .85s;
-      --bezier: cubic-bezier(.22,.61,.36,1);
+      --dur-1:.25s;
+      --dur-2:.45s;
+      --bezier:cubic-bezier(.22,.61,.36,1);
     }
 
-    /* ======================================================================
-       1) GLOBAL RESET & BASE
-       ====================================================================== */
+    /* System base */
     *{box-sizing:border-box}
     html,body{height:100%}
     html{scroll-behavior:smooth}
     body{
       margin:0;
       color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 10% -10%, #0ea4e814, transparent 60%),
-        radial-gradient(1000px 580px at 110% -10%, #2bcb5316, transparent 60%),
-        linear-gradient(180deg, #0b1220 0%, #0c1324 70%, #0b1220 100%);
-      font: 15px/1.65 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      background:var(--bg);
+      font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      text-rendering:optimizeLegibility;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    a{color:var(--kb-blue);text-decoration:none}
+    a:hover{filter:saturate(120%)}
+    a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
+      outline:3px solid var(--ring); outline-offset:2px; border-radius:12px;
     }
     img{max-width:100%; display:block}
-    a{color:var(--kb-blue); text-decoration:none}
-    a:hover{filter:saturate(115%)}
-    a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
-      outline:3px solid var(--ring); outline-offset:3px; border-radius:12px;
-    }
-    ::selection{background:color-mix(in oklab, var(--kb-blue) 30%, transparent); color:#fff}
 
-    /* ======================================================================
-       2) LAYOUT PRIMITIVES
-       ====================================================================== */
-    .container{max-width:1240px; margin:auto; padding:48px 20px}
-    .section{scroll-margin-top:92px}
-    .row{display:grid; gap:18px}
-    @media(min-width:768px){
+    /* Accessibility helpers */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .skip{position:absolute;top:8px;left:8px;background:#fff;padding:6px 10px;border-radius:10px;box-shadow:var(--shadow-1);z-index:1200}
+
+    /* Layout primitives */
+    .container{max-width:1180px;margin:auto;padding:48px 20px}
+    .section{scroll-margin-top:80px}
+    .muted{background:var(--muted)}
+    .row{display:grid;gap:16px}
+    @media(min-width:760px){
       .row.col-2{grid-template-columns:repeat(2,1fr)}
       .row.col-3{grid-template-columns:repeat(3,1fr)}
       .row.col-4{grid-template-columns:repeat(4,1fr)}
-      .row.col-5{grid-template-columns:repeat(5,1fr)}
-    }
-    .k-m{margin-top:16px}
-    .k-m2{margin-top:24px}
-    .k-m3{margin-top:36px}
-    .muted{color:var(--muted)}
-
-    /* ======================================================================
-       3) COMPONENTS — Pills, Buttons, Cards, Titles, Divider
-       ====================================================================== */
-    .pill{
-      display:inline-flex; align-items:center; gap:6px;
-      background:#122038; border:1px solid var(--stroke); color:#cfe4ff;
-      padding:6px 10px; border-radius:999px; font-weight:900; font-size:12px; letter-spacing:.24px
     }
 
-    .btn{
-      --bg:#fff; --fg:#0b1220; --bd:rgba(255,255,255,.1);
-      display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      padding:12px 16px; border-radius:14px; border:1px solid var(--bd);
-      background:var(--bg); color:var(--fg);
-      font-weight:1000; letter-spacing:.22px; cursor:pointer;
-      transition: transform var(--dur-1) var(--bezier), box-shadow var(--dur-1) var(--bezier), filter var(--dur-1) var(--bezier), background var(--dur-1) var(--bezier);
-      will-change: transform;
-    }
-    .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-1)}
-    .btn:active{transform:translateY(0)}
-    .btn.primary{--bg:linear-gradient(180deg, var(--kb-blue), #0990c9); --fg:#fff; --bd:transparent}
-    .btn.green{--bg:linear-gradient(180deg, var(--kb-green), #23b346); --fg:#061418; --bd:transparent}
-    .btn.ghost{--bg:transparent; --fg:#eaf3ff; --bd:var(--stroke)}
-    .btn.icon{padding:10px 12px}
+    /* Cards & utilities */
+    .card{background:rgba(255,255,255,.86); border:1px solid var(--stroke); border-radius:16px; box-shadow:var(--shadow-1); backdrop-filter:saturate(140%) blur(6px)}
+    .pad{padding:18px}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:#f1f4f9;color:#46576f;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:800;letter-spacing:.2px;border:1px solid #e6ebf3;background:#fff;cursor:pointer;transition:transform var(--dur-1) var(--bezier), box-shadow var(--dur-1) var(--bezier)}
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow-1)}
+    .btn.primary{background:var(--kb-blue);color:#fff;border-color:transparent}
+    .btn.green{background:var(--kb-green);color:#fff;border-color:transparent}
+    .btn.ghost{background:#fff}
+    .hint{font-size:12px;color:var(--text-2)}
+    .k-m{margin-top:14px}
+    .thumb{aspect-ratio:16/9;width:100%;border:0;border-radius:14px;object-fit:cover;display:block}
 
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--stroke); border-radius:var(--radius);
-      box-shadow:var(--shadow-1); backdrop-filter:saturate(150%) blur(8px)
-    }
-    .pad{padding:20px}
-    .pad-lg{padding:28px}
-    .pad-sm{padding:12px}
+    .title{font-size:var(--fs-h2); font-weight:900; display:flex; align-items:center; gap:12px; letter-spacing:.2px}
+    .title .bar{width:7px;height:24px;background:linear-gradient(180deg,var(--kb-blue),var(--kb-green));border-radius:4px}
 
-    .title{font-size:var(--fs-h2); font-weight:1000; display:flex; align-items:center; gap:12px}
-    .title .bar{width:8px; height:26px; border-radius:8px; background:linear-gradient(180deg, var(--kb-blue), var(--kb-green))}
-    .h1{font-size:var(--fs-hero); font-weight:1000; line-height:var(--lh-hero); letter-spacing:.2px; margin:10px 0}
-    .lead{font-size:var(--fs-lead); color:#d6e7ff}
+    /* Fancy separators */
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#E6EDF6,transparent)}
 
-    .divider{height:1px; background:linear-gradient(90deg, transparent, #21324a, transparent)}
-
-    /* ======================================================================
-       4) NAVBAR — Sticky, co lại khi cuộn, active highlight
-       ====================================================================== */
+    /* Header / Navbar */
     header.nav{
       position:sticky; top:0; z-index:1000;
-      background:color-mix(in oklab, #0b1220 86%, transparent);
-      backdrop-filter:saturate(160%) blur(10px);
+      background:color-mix(in oklab, white 90%, transparent);
+      backdrop-filter:saturate(160%) blur(8px);
       border-bottom:1px solid var(--stroke);
-      transition:box-shadow var(--dur-2) var(--bezier), transform var(--dur-1) var(--bezier), background var(--dur-2) var(--bezier);
+      transition:box-shadow var(--dur-2) var(--bezier), background var(--dur-2) var(--bezier), transform var(--dur-1) var(--bezier);
+      will-change:transform;
     }
-    .nav-inner{
-      height:78px; max-width:1240px; margin:auto; padding:0 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:16px
-    }
-    .brand{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.7px}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:72px;max-width:1180px;margin:auto;padding:0 16px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.6px}
     .brand .mark{font-size:22px}
     .brand .mark .a{color:var(--kb-blue)}
     .brand .mark .b{color:var(--kb-green)}
-    /* Theo yêu cầu: KHÔNG hiển thị slogan cạnh logo */
+    /* yêu cầu: bỏ slogan cạnh logo -> không có <small> nữa */
 
-    .nav-list{display:none; gap:6px; flex-wrap:wrap}
-    @media(min-width:1024px){.nav-list{display:flex}}
-    .nav-link{
-      border:0; background:transparent; padding:10px 12px; border-radius:10px;
-      font-weight:900; color:#d8e6ff; cursor:pointer; transition:background var(--dur-1) var(--bezier), color var(--dur-1) var(--bezier)
-    }
-    .nav-link[aria-current="page"], .nav-link:hover{background:#10233d; color:#ffffff}
+    .nav-list{display:none;gap:6px;flex-wrap:wrap}
+    @media(min-width:1000px){.nav-list{display:flex}}
+    .nav-link{border:0;background:transparent;padding:10px 12px;border-radius:10px;font-weight:700;color:#233348;cursor:pointer}
+    .nav-link[aria-current="page"], .nav-link:hover{background:#eef6ff}
 
-    .mobile-select{
-      display:block; background:#0f1d33; color:#d8e6ff; border:1px solid var(--stroke);
-      padding:10px 12px; border-radius:10px
-    }
-    @media(min-width:1024px){ .mobile-select{display:none} }
+    .mobile-nav{display:flex; gap:10px}
+    .mobile-select{display:block}
+    @media(min-width:1000px){ .mobile-select{display:none} }
 
-    .shrink{transform:translateY(-1px); box-shadow:0 12px 40px rgba(0,0,0,.25)}
-
-    /* ======================================================================
-       5) HERO — Mesh gradient + subtle sparkles + parallax text
-       ====================================================================== */
+    /* Hero with animated mesh + parallax */
     .hero{
-      position:relative; overflow:hidden;
+      position:relative;
+      overflow:hidden;
       background:
-        radial-gradient(800px 300px at -10% -20%, #0ea4e814, transparent 60%),
-        radial-gradient(700px 280px at 120% -20%, #2bcb5314, transparent 60%),
-        linear-gradient(180deg, transparent, #0b1426 65%, transparent);
-      isolation:isolate;
+        radial-gradient(800px 300px at 12% -30%, rgba(14,164,232,.15), transparent 60%),
+        radial-gradient(600px 260px at 96% -20%, rgba(43,203,83,.12), transparent 60%),
+        linear-gradient(180deg,#fff,#f8fbff 60%, #f3f6fb 100%);
     }
     .mesh{
-      position:absolute; inset:-10% -30% auto -20%; height:70vh; min-height:360px; z-index:0; pointer-events:none;
-      background:
-        radial-gradient(600px 360px at 12% 20%, color-mix(in oklab, var(--kb-blue) 36%, transparent), transparent 60%),
-        radial-gradient(520px 340px at 86% 16%, color-mix(in oklab, var(--kb-green) 30%, transparent), transparent 62%),
-        radial-gradient(540px 360px at 50% 80%, color-mix(in oklab, var(--kb-gold) 28%, transparent), transparent 64%);
-      animation:floatMesh 16s var(--bezier) infinite alternate;
-      filter:saturate(130%) blur(1px);
+      position:absolute; inset:-10% -20% auto -10%; height:60vh; min-height:360px; pointer-events:none; z-index:0;
+      background: radial-gradient(800px 450px at 10% 20%, rgba(14,164,232,.18), transparent 60%),
+                  radial-gradient(700px 420px at 90% 10%, rgba(43,203,83,.16), transparent 60%),
+                  radial-gradient(600px 400px at 40% 80%, rgba(255,190,0,.20), transparent 65%);
+      animation:floatMesh 14s var(--bezier) infinite alternate;
+      filter:saturate(110%) blur(1px);
     }
     @keyframes floatMesh{
-      0%{transform:translate3d(0,-10px,0) scale(1)}
-      100%{transform:translate3d(0,10px,0) scale(1.03)}
+      0%{transform:translateY(-12px) scale(1)}
+      100%{transform:translateY(6px) scale(1.02)}
     }
-    .sparkles{
-      position:absolute; inset:0; pointer-events:none; z-index:0; opacity:.35;
-      background:
-        radial-gradient(2px 2px at 10% 20%, #fff 35%, transparent 40%),
-        radial-gradient(2px 2px at 30% 70%, #fff 35%, transparent 40%),
-        radial-gradient(2px 2px at 60% 30%, #fff 35%, transparent 40%),
-        radial-gradient(2px 2px at 80% 60%, #fff 35%, transparent 40%);
-      animation: twinkle 5s linear infinite;
-      mix-blend-mode:screen;
-    }
-    @keyframes twinkle{
-      from{opacity:.2; transform:translateY(0)}
-      50%{opacity:.5; transform:translateY(2px)}
-      to{opacity:.2; transform:translateY(0)}
-    }
-    .hero-grid{position:relative; z-index:1; display:grid; gap:22px; grid-template-columns:1fr}
-    @media(min-width:960px){ .hero-grid{grid-template-columns:1.15fr 1fr} }
-    .lift{transition:transform var(--dur-1) var(--bezier), box-shadow var(--dur-1) var(--bezier)}
-    .lift:hover{transform:translateY(-3px); box-shadow:var(--shadow-2)}
+    .hero-grid{position:relative; z-index:1; display:grid; gap:20px; grid-template-columns:1fr}
+    @media(min-width:900px){ .hero-grid{grid-template-columns:1.15fr 1fr} }
+    .h1{font-size:var(--fs-hero);font-weight:900;line-height:1.08;margin:8px 0;letter-spacing:.2px}
+    .lead{font-size:var(--fs-lead); color:var(--text-2)}
+    .lift:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
 
-    .stats{display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
-    .stat{border:1px solid var(--stroke); background:var(--glass); border-radius:14px; padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.15)}
-    .stat small{color:#9fb1c9; text-transform:uppercase; letter-spacing:.3px}
+    /* Input & form */
+    input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #dfe6f2;background:#fff;transition:box-shadow var(--dur-1) var(--bezier)}
+    input:hover,select:hover,textarea:hover{box-shadow:0 0 0 4px color-mix(in oklab, var(--kb-blue) 20%, transparent)}
+    label span{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px}
 
-    /* ======================================================================
-       6) REVEAL EFFECT — IntersectionObserver (add class .inview)
-       ====================================================================== */
+    /* Map container */
+    #leafletMap{min-height:460px;border-radius:16px;border:1px solid var(--stroke);overflow:hidden}
+
+    /* Scroll reveal */
     .reveal{opacity:.001; transform:translateY(16px) scale(.98); filter:blur(2px)}
     .reveal.inview{opacity:1; transform:none; filter:none; transition:opacity .7s var(--bezier), transform .7s var(--bezier), filter .7s var(--bezier)}
 
-    /* ======================================================================
-       7) FORMS — chung cho các phần sau (support, logistics, rd, dealer)
-       ====================================================================== */
-    input,select,textarea{
-      width:100%; padding:12px 14px; border-radius:12px; border:1px solid #1b2a45;
-      background:#0f1d33; color:#d8e6ff; transition: box-shadow var(--dur-1) var(--bezier), border-color var(--dur-1) var(--bezier)
+    /* Modal (patched, scrollable) */
+    .modal{position:fixed;inset:0;background:rgba(9,12,20,.48);display:none;align-items:flex-start;justify-content:center;padding:40px;z-index:1200}
+    .modal.active{display:flex}
+    .modal .panel{
+      max-width:980px;width:100%;border-radius:18px;background:#fff;border:1px solid var(--stroke);
+      max-height:calc(100vh - 80px); overflow:auto; box-shadow:var(--shadow-2)
     }
-    input::placeholder,textarea::placeholder{color:#7e94b7}
-    input:hover,select:hover,textarea:hover{box-shadow:0 0 0 4px color-mix(in oklab, var(--kb-blue) 20%, transparent)}
-    input:focus,select:focus,textarea:focus{border-color:#2a67a2; box-shadow:0 0 0 4px color-mix(in oklab, var(--kb-blue) 28%, transparent)}
-    label span{display:block; font-size:12px; color:#8fb4e6; margin-bottom:6px}
+    .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    @media(max-width:900px){ .md-grid{grid-template-columns:1fr} }
+    @media(max-width:680px){ .modal{padding:16px} }
 
-    /* ======================================================================
-       8) EXTRA UTILS — nhiều class tiện ích để phần 2/3-3/3 dùng
-       ====================================================================== */
-    .grid{display:grid}
-    .flex{display:flex}
-    .flex-col{flex-direction:column}
-    .items-center{align-items:center}
-    .justify-between{justify-content:space-between}
-    .justify-center{justify-content:center}
-    .gap-4{gap:16px}
-    .gap-6{gap:24px}
-    .gap-8{gap:32px}
-    .text-center{text-align:center}
-    .text-right{text-align:right}
-    .w-full{width:100%}
-    .max-w-600{max-width:600px}
-    .max-w-720{max-width:720px}
-    .max-w-920{max-width:920px}
-    .rounded{border-radius:var(--radius)}
-    .rounded-lg{border-radius:var(--radius-lg)}
-    .border{border:1px solid var(--stroke)}
-    .bg-panel{background:var(--panel)}
-    .bg-panel2{background:var(--panel-2)}
-    .thin{font-weight:300}
-    .semi{font-weight:600}
-    .bold{font-weight:800}
-    .shadow-1{box-shadow:var(--shadow-1)}
-    .shadow-2{box-shadow:var(--shadow-2)}
-    .shadow-3{box-shadow:var(--shadow-3)}
-    .opacity-70{opacity:.7}
-    .opacity-85{opacity:.85}
-    .hidden{display:none !important}
-    .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    /* Footer */
+    footer{border-top:1px solid var(--stroke)}
+    .credits{display:flex;flex-wrap:wrap; gap:18px}
 
-    /* ======================================================================
-       9) DECORATIONS — gradient outline, animated underline cho heading
-       ====================================================================== */
-    .title-underline{
-      height:3px; width:100%; opacity:.28; border-radius:999px;
-      background:linear-gradient(90deg, var(--kb-blue), var(--kb-green), var(--kb-gold))
-    }
-    .underline-animated{
-      position:relative; display:inline-block; padding-bottom:6px;
-    }
-    .underline-animated::after{
-      content:""; position:absolute; left:0; bottom:0; height:2px; width:0%;
-      background:linear-gradient(90deg, var(--kb-blue), var(--kb-green), var(--kb-gold));
-      border-radius:999px; transition:width .6s var(--bezier)
-    }
-    .underline-animated:hover::after{width:100%}
+    /* Header shrinking on scroll */
+    .shrink{transform:translateY(-2px); box-shadow:0 8px 24px rgba(10,20,35,.06)}
 
-    /* ======================================================================
-       10) ACCESSIBILITY — Skip link
-       ====================================================================== */
-    .skip{
-      position:absolute; top:8px; left:8px; background:#0f1d33; color:#fff;
-      padding:6px 10px; border-radius:10px; box-shadow:var(--shadow-1); z-index:1200
-    }
+    /* Decorative gradient bar under section titles */
+    .title-underline{height:3px;background:linear-gradient(90deg,var(--kb-blue),var(--kb-green),var(--kb-gold));border-radius:999px; width:100%; opacity:.25}
 
-    /* ======================================================================
-       11) REDUCED MOTION
-       ====================================================================== */
+    /* Optional custom scrollbar (webkit) */
+    ::-webkit-scrollbar{height:12px;width:12px}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#cfe9fb,#bff0cd); border-radius:10px; border:3px solid transparent; background-clip:content-box}
+    ::-webkit-scrollbar-track{background:transparent}
+
+    /* Reduced motion preference */
     @media (prefers-reduced-motion: reduce){
       .reveal{opacity:1; transform:none; filter:none; transition:none}
       .mesh{animation:none}
-      .sparkles{animation:none}
       html{scroll-behavior:auto}
       .btn,.lift{transition:none}
       header.nav{transition:none}
@@ -316,12 +215,12 @@
 </head>
 
 <body>
-  <a class="visually-hidden skip" href="#main">Bỏ qua đến nội dung chính</a>
+  <a class="sr-only skip" href="#main">Bỏ qua đến nội dung chính</a>
 
-  <!-- ============================================================
-       HEADER / NAVBAR (KHÔNG có slogan cạnh logo)
-       ============================================================ -->
-  <header class="nav" id="navbar" role="navigation" aria-label="Thanh điều hướng">
+  <!-- ==============================
+       HEADER / NAVBAR (no slogan near logo)
+       ============================== -->
+  <header class="nav" id="navbar">
     <div class="nav-inner">
       <a class="brand" href="#home" aria-label="Trang chủ KINGBULL">
         <div class="mark"><span class="a">KING</span><span class="b">BULL</span></div>
@@ -334,547 +233,291 @@
         <a class="nav-link" href="#videos">Video</a>
         <a class="nav-link" href="#dealer">Đại lý</a>
         <a class="nav-link" href="#supply">Bản đồ</a>
-        <a class="nav-link" href="#support">Hỗ trợ</a>
+        <a class="nav-link" href="#support">Hỗ trợ 24/7</a>
         <a class="nav-link" href="#logistics">Logistics</a>
         <a class="nav-link" href="#news">Tin tức</a>
-        <a class="nav-link" href="#rd">R&D</a>
+        <a class="nav-link" href="#rd">Hợp tác R&D</a>
       </nav>
 
-      <select class="mobile-select" id="mobileSelect" aria-label="Chọn mục">
-        <option value="#home">Home</option>
-        <option value="#cases">Case Study</option>
-        <option value="#library">Thư viện PDF</option>
-        <option value="#videos">Video</option>
-        <option value="#dealer">Đại lý</option>
-        <option value="#supply">Bản đồ</option>
-        <option value="#support">Hỗ trợ</option>
-        <option value="#logistics">Logistics</option>
-        <option value="#news">Tin tức</option>
-        <option value="#rd">R&D</option>
-      </select>
+      <div class="mobile-nav">
+        <select class="mobile-select" id="mobileSelect" aria-label="Chọn mục">
+          <option value="#home">Home</option>
+          <option value="#cases">Case Study</option>
+          <option value="#library">Thư viện PDF</option>
+          <option value="#videos">Video</option>
+          <option value="#dealer">Đại lý</option>
+          <option value="#supply">Bản đồ</option>
+          <option value="#support">Hỗ trợ 24/7</option>
+          <option value="#logistics">Logistics</option>
+          <option value="#news">Tin tức</option>
+          <option value="#rd">Hợp tác R&D</option>
+        </select>
+      </div>
     </div>
   </header>
 
-  <!-- ============================================================
-       MAIN — PHẦN 1/3
-       ============================================================ -->
+  <!-- ==============================
+       MAIN
+       ============================== -->
   <main id="main">
 
-    <!-- ========================================================
-         HERO
-         ======================================================== -->
-    <section id="home" class="section hero" aria-label="Phần giới thiệu đầu trang">
+    <!-- ============ HERO ============ -->
+    <section id="home" class="section hero">
       <div class="mesh" aria-hidden="true"></div>
-      <div class="sparkles" aria-hidden="true"></div>
-
       <div class="container hero-grid">
-        <!-- Left: Copy -->
         <div class="reveal">
           <span class="pill">Aquafeed B2B • Việt Nam</span>
-          <h1 class="h1 lift" id="heroTitle">
-            KINGBULL — <span style="color:var(--kb-blue)">Chuyên nghiệp</span>,
-            <span style="color:var(--kb-green)">Tin cậy</span>,
-            <span style="color:var(--kb-gold)">Hướng kết quả</span>
-          </h1>
-          <p class="lead">
-            Năng lực sản xuất & cung ứng quy mô lớn, tối ưu lợi nhuận cho đại lý và trang trại nuôi.
-            Hệ giải pháp kỹ thuật – tài chính minh bạch theo ROI, hỗ trợ triển khai tại hiện trường.
-          </p>
-
+          <h1 class="h1 lift" id="heroTitle">KINGBULL — <span style="color:var(--kb-blue)">Chuyên nghiệp</span>, <span style="color:var(--kb-green)">Tin cậy</span>, <span style="color:var(--kb-gold)">Hướng kết quả</span></h1>
+          <p class="lead">Năng lực sản xuất & cung ứng quy mô lớn, tối ưu lợi nhuận cho đại lý và trang trại nuôi quy mô. Hệ giải pháp kỹ thuật & tài chính rõ ràng theo ROI.</p>
           <div class="k-m">
-            <a class="btn primary" href="#cases" aria-label="Xem hồ sơ dự án thành công">Xem Hồ sơ Dự án Thành công</a>
-            <a class="btn ghost" href="#support" style="margin-left:10px" aria-label="Liên hệ hợp tác">Liên hệ Hợp tác</a>
+            <a class="btn primary" href="#cases">Xem Hồ sơ Dự án Thành công</a>
+            <a class="btn ghost" href="#support" style="margin-left:8px">Liên hệ Hợp tác</a>
           </div>
 
-          <div class="stats k-m">
-            <div class="stat">
-              <small>Năng lực cung ứng</small>
-              <div class="k-m"><b>> 100.000 tấn/năm</b></div>
-            </div>
-            <div class="stat">
-              <small>Mạng lưới phân phối</small>
-              <div class="k-m"><b>63 tỉnh thành</b></div>
-            </div>
-            <div class="stat">
-              <small>Hỗ trợ kỹ thuật</small>
-              <div class="k-m"><b>24/7</b></div>
-            </div>
+          <div class="row col-3 k-m">
+            <div class="card pad lift"><small class="hint">Năng lực cung ứng</small><div><b>> 100.000 tấn/năm</b></div></div>
+            <div class="card pad lift"><small class="hint">Mạng lưới phân phối</small><div><b>63 tỉnh thành</b></div></div>
+            <div class="card pad lift"><small class="hint">Hỗ trợ kỹ thuật</small><div><b>24/7</b></div></div>
           </div>
         </div>
 
-        <!-- Right: Video preview -->
-        <div class="card lift reveal" role="region" aria-label="Video flycam nhà máy">
-          <iframe
-            title="Flycam nhà máy"
-            class="w-full"
-            style="aspect-ratio:16/9; border-radius:var(--radius) var(--radius) 0 0"
+        <div class="card lift reveal">
+          <iframe title="Flycam nhà máy" class="thumb" style="border-radius:16px 16px 0 0"
             src="https://www.youtube.com/embed/1La4QzGeaaQ"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen></iframe>
-          <div class="pad" style="padding:12px 16px">
-            <div class="muted">Video flycam toàn cảnh nhà máy</div>
-          </div>
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          <div class="pad" style="padding:12px 16px"><div class="hint">Video flycam toàn cảnh nhà máy</div></div>
         </div>
       </div>
 
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         SECTION: GIÁ TRỊ NHANH (3 highlights)
-         ======================================================== -->
-    <section class="section" aria-label="Giá trị Kingbull">
-      <div class="container">
-        <div class="row col-3">
-          <div class="card pad lift reveal">
-            <div class="title"><span class="bar"></span><span>Năng lực cung ứng lớn</span></div>
-            <p class="k-m muted">
-              Chuỗi sản xuất–kho–logistics đồng bộ, giao nhanh đúng hẹn với độ tin cậy cao.
-            </p>
-          </div>
-          <div class="card pad lift reveal">
-            <div class="title"><span class="bar"></span><span>Tối ưu lợi nhuận</span></div>
-            <p class="k-m muted">
-              Công thức theo ROI, tối ưu FCR & vòng quay vốn, minh bạch dữ liệu và KPI.
-            </p>
-          </div>
-          <div class="card pad lift reveal">
-            <div class="title"><span class="bar"></span><span>Hỗ trợ kỹ thuật 24/7</span></div>
-            <p class="k-m muted">
-              Đội ngũ kỹ thuật theo khu vực, phản hồi nhanh, onsite khi cần — đồng hành trọn chu kỳ nuôi.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="divider"></div>
-    </section>
-
-    <!-- ========================================================
-         (Phần 2/3 sẽ tiếp tục: Case Studies + Modal, Library PDF,
-          Videos, Dealer Portal, Supply Map ...)
-         ======================================================== -->
-        <!-- ========================================================
-         CASE STUDIES — Hồ sơ dự án nuôi thành công
-         ======================================================== -->
-    <section id="cases" class="section" aria-label="Hồ sơ dự án nuôi thành công">
+    <!-- ============ CASE STUDIES ============ -->
+    <section id="cases" class="section">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Hồ sơ dự án nuôi thành công</span></div>
-        <div class="title-underline k-m reveal"></div>
-        <p class="muted k-m reveal">
-          Danh sách dự án thực tế với dữ liệu ROI minh bạch: hình ảnh, video, nhận xét của chủ trại, chi phí & lợi nhuận.
-        </p>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
+        <p class="hint reveal">Dữ liệu ROI minh bạch — video, hình ảnh & nhận xét chủ trại</p>
 
-        <!-- Bộ lọc -->
-        <div class="k-m3 reveal" role="group" aria-label="Bộ lọc Case Study" style="display:flex;flex-wrap:wrap;gap:14px">
-          <label style="min-width:220px;flex:1 1 220px">
-            <span>Loài nuôi</span>
-            <select id="caseFilter" aria-label="Chọn loài nuôi">
-              <!-- JS sẽ fill: Tất cả, Cá tra, Cá rô phi, Cá lóc, ... -->
-            </select>
-          </label>
-
-          <label class="w-full max-w-600" style="flex:2 1 320px">
-            <span>Tìm nhanh theo tên dự án (tùy chọn)</span>
-            <input id="caseSearch" type="search" placeholder="Nhập vài ký tự để lọc nhanh..." aria-label="Tìm kiếm dự án"/>
-          </label>
-
-          <div class="pill" id="caseCount" aria-live="polite">0 dự án</div>
+        <div class="k-m reveal" style="display:flex;align-items:center;gap:10px">
+          <label style="max-width:260px"><span>Loài nuôi</span><select id="caseFilter"></select></label>
         </div>
 
-        <!-- Danh sách thẻ dự án -->
-        <div class="row col-3 k-m3" id="caseList" aria-live="polite">
-          <!-- JS sẽ render card:
-            - Ảnh ao nuôi
-            - Tên dự án + pill loài
-            - Diện tích, chu kỳ, sản lượng, FCR
-            - 3 ô: Doanh thu, Chi phí thức ăn, ROI
-            - Nút "Xem chi tiết" (mở modal)
-          -->
-          <noscript>
-            <div class="card pad">
-              Vui lòng bật JavaScript để xem danh sách dự án và tính ROI.
-            </div>
-          </noscript>
-        </div>
-
-        <!-- Gợi ý hành động -->
-        <div class="k-m2 reveal" style="display:flex;gap:12px;flex-wrap:wrap">
-          <a class="btn primary" href="#support">Đặt lịch trao đổi kỹ thuật</a>
-          <a class="btn ghost" href="#logistics">Tính Logistics & Kho bãi</a>
-        </div>
+        <div class="row col-3 k-m" id="caseList" aria-live="polite"></div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         TECHNICAL PDF LIBRARY — Thư viện kỹ thuật chuyên sâu
-         ======================================================== -->
-    <section id="library" class="section" aria-label="Thư viện kỹ thuật chuyên sâu">
+    <!-- ============ LIBRARY ============ -->
+    <section id="library" class="section muted">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Thư viện kỹ thuật chuyên sâu</span></div>
-        <div class="title-underline k-m reveal"></div>
-        <p class="muted k-m reveal">
-          Tài liệu PDF tải xuống: tối ưu FCR, phòng bệnh, quản lý môi trường nước, tối ưu vòng quay vốn. Lọc theo <b>loài nuôi</b>,
-          <b>giai đoạn</b> và <b>mục tiêu kỹ thuật</b>.
-        </p>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
+        <p class="hint reveal">PDF: FCR, phòng bệnh, quản lý môi trường nước, tối ưu vòng quay vốn</p>
 
-        <!-- Bộ lọc 3 cột -->
-        <div class="row col-3 k-m3 reveal" style="gap:14px">
-          <label><span>Loài</span><select id="pdfSpecies" aria-label="Chọn loài"></select></label>
-          <label><span>Giai đoạn</span><select id="pdfStage" aria-label="Chọn giai đoạn"></select></label>
-          <label><span>Mục tiêu kỹ thuật</span><select id="pdfGoal" aria-label="Chọn mục tiêu"></select></label>
+        <div class="row col-3 k-m reveal" style="gap:12px">
+          <label><span>Loài</span><select id="pdfSpecies"></select></label>
+          <label><span>Giai đoạn</span><select id="pdfStage"></select></label>
+          <label><span>Mục tiêu</span><select id="pdfGoal"></select></label>
         </div>
 
-        <!-- Danh sách PDF -->
-        <div class="row col-3 k-m3" id="pdfList" aria-live="polite">
-          <!-- JS render: card tiêu đề + badge meta + nút tải -->
-          <noscript>
-            <div class="card pad">Vui lòng bật JavaScript để duyệt và tải tài liệu PDF.</div>
-          </noscript>
-        </div>
-
-        <!-- Gợi ý -->
-        <div class="k-m2 reveal">
-          <div class="card pad">
-            <b>Mẹo:</b>
-            <ul class="muted k-m" style="line-height:1.9">
-              <li>Tải tài liệu phù hợp loài & giai đoạn đang nuôi để điều chỉnh <b>FCR</b> và <b>chiến lược cho ăn</b>.</li>
-              <li>Kết hợp dữ liệu môi trường nước để hạn chế rủi ro <b>NH₃/NH₄⁺</b>, <b>NO₂⁻</b>, tảo bùng phát.</li>
-              <li>Xem thêm các case study thực tế để cross-check <b>ROI</b>.</li>
-            </ul>
-          </div>
-        </div>
+        <div class="row col-3 k-m" id="pdfList"></div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         VIDEO — Quy trình sản xuất & năng lực nhà máy
-         ======================================================== -->
-    <section id="videos" class="section" aria-label="Video quy trình sản xuất & năng lực nhà máy">
+    <!-- ============ VIDEOS ============ -->
+    <section id="videos" class="section">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Video quy trình sản xuất & năng lực nhà máy</span></div>
-        <div class="title-underline k-m reveal"></div>
-
-        <!-- Danh sách video -->
-        <div class="row col-3 k-m3" id="videoList" aria-live="polite">
-          <!-- JS render: thẻ video iframe + tiêu đề -->
-          <noscript>
-            <div class="card pad">Vui lòng bật JavaScript để xem video.</div>
-          </noscript>
-        </div>
-
-        <!-- Gallery ảnh chất lượng cao -->
-        <div class="row col-4 k-m3 reveal" style="grid-template-columns:repeat(4,1fr)">
-          <img class="lift" style="border-radius:var(--radius);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--stroke)"
-               alt="Kho lạnh Kingbull" src="https://images.unsplash.com/photo-1541911087797-f89237bd95d6?q=80&w=1200&auto=format&fit=crop" />
-          <img class="lift" style="border-radius:var(--radius);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--stroke)"
-               alt="Container xuất hàng" src="https://images.unsplash.com/photo-1544989164-31dc3c645987?q=80&w=1200&auto=format&fit=crop" />
-          <img class="lift" style="border-radius:var(--radius);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--stroke)"
-               alt="Kiểm định chất lượng" src="https://images.unsplash.com/photo-1581090700227-1e37b190418e?q=80&w=1200&auto=format&fit=crop" />
-          <img class="lift" style="border-radius:var(--radius);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--stroke)"
-               alt="Dây chuyền sản xuất" src="https://images.unsplash.com/photo-1581093588401-a1b1a1c5381e?q=80&w=1200&auto=format&fit=crop" />
-        </div>
-
-        <!-- CTA -->
-        <div class="k-m2 reveal" style="display:flex;gap:12px;flex-wrap:wrap">
-          <a class="btn primary" href="#dealer">Vào khu vực Đại lý</a>
-          <a class="btn ghost" href="#supply">Xem bản đồ cung ứng</a>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
+        <div class="row col-3 k-m" id="videoList"></div>
+        <div class="row col-4 k-m reveal" style="grid-template-columns:repeat(4,1fr)">
+          <img class="thumb lift" alt="Kho lạnh" src="https://images.unsplash.com/photo-1541911087797-f89237bd95d6?q=80&w=1200&auto=format&fit=crop" />
+          <img class="thumb lift" alt="Container xuất hàng" src="https://images.unsplash.com/photo-1544989164-31dc3c645987?q=80&w=1200&auto=format&fit=crop" />
+          <img class="thumb lift" alt="Kiểm định chất lượng" src="https://images.unsplash.com/photo-1581090700227-1e37b190418e?q=80&w=1200&auto=format&fit=crop" />
+          <img class="thumb lift" alt="Dây chuyền sản xuất" src="https://images.unsplash.com/photo-1581093588401-a1b1a1c5381e?q=80&w=1200&auto=format&fit=crop" />
         </div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         DEALER PORTAL — Khu vực đại lý & trang trại (mock login)
-         ======================================================== -->
-    <section id="dealer" class="section" aria-label="Khu vực dành cho đại lý & trang trại">
+    <!-- ============ DEALER PORTAL ============ -->
+    <section id="dealer" class="section muted">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Khu vực Dành cho Đại lý & Trang trại</span></div>
-        <div class="title-underline k-m reveal"></div>
-        <p class="muted k-m reveal">
-          Nội dung bảo vệ bằng đăng nhập (mô phỏng): <b>bảng giá số lượng lớn</b>, <b>chính sách chiết khấu</b>, <b>tài liệu huấn luyện kỹ thuật</b>, video training.
-          Dùng mã truy cập: <code>KINGBULL2025</code>.
-        </p>
-
-        <!-- Hộp render form/login & nội dung sau đăng nhập -->
-        <div id="dealerBox" class="k-m3 reveal" aria-live="polite">
-          <!-- JS sẽ render:
-            - Form: Email, Mã truy cập, Nút đăng nhập
-            - Khi đúng mã & email hợp lệ -> hiển thị danh sách tài liệu + video training
-          -->
-          <noscript>
-            <div class="card pad">
-              Vui lòng bật JavaScript để đăng nhập và xem tài liệu nội bộ.
-            </div>
-          </noscript>
-        </div>
-
-        <!-- Lưu ý bảo mật -->
-        <div class="k-m2 reveal">
-          <div class="card pad">
-            <b>Lưu ý:</b> Đây là mô phỏng giao diện bảo mật — dữ liệu nội bộ thật sẽ được lưu trữ và kiểm soát ở hệ thống riêng.
-          </div>
-        </div>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
+        <p class="hint reveal">Đăng nhập mock để xem tài liệu nội bộ (bảng giá, policy, training)</p>
+        <div id="dealerBox" class="k-m reveal"></div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         SUPPLY MAP — Bản đồ năng lực cung ứng (Leaflet)
-         ======================================================== -->
-    <section id="supply" class="section" aria-label="Bản đồ năng lực cung ứng">
+    <!-- ============ SUPPLY MAP ============ -->
+    <section id="supply" class="section">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Bản đồ năng lực cung ứng</span></div>
-        <div class="title-underline k-m reveal"></div>
-        <p class="muted k-m reveal">
-          Hiển thị vùng phân phối, kho bãi & thời gian giao hàng dự kiến (mô phỏng). Lọc theo khu vực để xem các điểm kho/vùng giao chính.
-        </p>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
+        <p class="hint reveal">Vùng phân phối, kho bãi, thời gian giao hàng dự kiến — dùng dữ liệu mô phỏng</p>
 
-        <!-- Bộ lọc khu vực -->
-        <div class="k-m3 reveal" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
-          <label style="min-width:220px;flex:1 1 220px">
-            <span>Khu vực</span>
-            <select id="regionFilter" aria-label="Chọn khu vực">
-              <option>Tất cả</option>
-              <option>ĐBSCL</option>
-              <option>Miền Nam</option>
-              <option>Miền Trung</option>
-              <option>Miền Bắc</option>
-            </select>
-          </label>
-
-          <!-- Legend -->
-          <div class="pill" aria-hidden="true">● Kho trung tâm</div>
-          <div class="pill" aria-hidden="true" style="background:#0EA4E820;color:#cfe4ff;border-color:#0EA4E866">● Điểm giao</div>
+        <div class="k-m reveal" style="display:flex;align-items:center;gap:10px">
+          <label style="max-width:220px"><span>Khu vực</span><select id="regionFilter">
+            <option>Tất cả</option><option>ĐBSCL</option><option>Miền Nam</option><option>Miền Trung</option><option>Miền Bắc</option>
+          </select></label>
         </div>
 
-        <!-- Bản đồ -->
-        <div class="k-m3 reveal">
-          <div id="leafletMap" class="lift"
-               style="min-height:480px;border-radius:var(--radius);border:1px solid var(--stroke);overflow:hidden"></div>
-        </div>
-
-        <!-- Gợi ý sử dụng -->
-        <div class="k-m2 reveal">
-          <div class="card pad">
-            <div class="row col-3">
-              <div>
-                <b>Phóng to/thu nhỏ</b>
-                <p class="muted k-m">Dùng nút +/− trên bản đồ để xem chi tiết kho & điểm giao.</p>
-              </div>
-              <div>
-                <b>Xem popup</b>
-                <p class="muted k-m">Nhấp vào biểu tượng để xem tên kho, khu vực hoặc tên điểm giao.</p>
-              </div>
-              <div>
-                <b>Kết hợp Logistics</b>
-                <p class="muted k-m">Vào mục <a href="#logistics">Tính Logistics</a> để ước số chuyến & thời gian giao từ kho tối ưu.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <div class="k-m reveal"><div id="leafletMap" class="lift"></div></div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         (PHẦN 3/3 sẽ tiếp tục: Hỗ trợ 24/7, Logistics, Tin tức,
-          Hợp tác R&D, Footer, Modal, Scripts)
-         ======================================================== -->
-    <!-- ========================================================
-         SUPPORT — Hỗ trợ kỹ thuật 24/7
-         ======================================================== -->
-    <section id="support" class="section" aria-label="Hỗ trợ kỹ thuật 24/7">
+    <!-- ============ SUPPORT ============ -->
+    <section id="support" class="section muted">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Hỗ trợ kỹ thuật 24/7</span></div>
-        <div class="title-underline k-m reveal"></div>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
 
-        <div class="row col-3 k-m3">
-          <div class="card pad lift reveal" role="region" aria-label="Kênh liên hệ nhanh">
+        <div class="row col-3 k-m" style="grid-template-columns: 1fr 2fr">
+          <div class="card pad lift reveal">
             <b>Liên hệ nhanh</b>
-            <p class="muted k-m">Kết nối trực tiếp đội kỹ thuật theo khu vực.</p>
-            <div class="k-m" style="display:grid;gap:10px">
-              <a class="btn primary" href="tel:+84587085649" aria-label="Gọi hotline kỹ thuật">Gọi Hotline kỹ thuật</a>
-              <a class="btn ghost" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Chat Zalo OA</a>
-              <a class="btn ghost" href="mailto:admin@kingbull.com.vn">Gửi Email</a>
+            <div class="k-m" style="display:grid;gap:8px">
+              <a class="btn primary" href="tel:+84587085649">Gọi Hotline kỹ thuật</a>
+              <a class="btn" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Chat Zalo OA</a>
+              <a class="btn" href="mailto:admin@kingbull.com.vn">Gửi Email</a>
             </div>
-            <div class="k-m muted">
+            <div class="k-m hint">
               <div><b>Địa chỉ:</b> Tầng 6, số 41, CMT8, P. Cái Khế, Cần Thơ</div>
               <div><b>Điện thoại:</b> 058.708.5649</div>
               <div><b>Email:</b> admin@kingbull.com.vn</div>
             </div>
           </div>
 
-          <form id="supportForm" class="card pad lift reveal" aria-label="Form đặt lịch hẹn với chuyên gia">
+          <form id="supportForm" class="card pad lift reveal">
             <b>Đặt lịch hẹn với chuyên gia</b>
-            <div class="row col-2 k-m2">
-              <label><span>Họ tên</span><input required id="spName" placeholder="Nguyễn Văn A" /></label>
-              <label><span>Số điện thoại</span><input required id="spPhone" placeholder="09xx xxx xxx" /></label>
+            <div class="row col-2 k-m">
+              <label><span>Họ tên</span><input required id="spName" placeholder="Nguyễn Văn A"/></label>
+              <label><span>Số điện thoại</span><input required id="spPhone" placeholder="09xx xxx xxx"/></label>
               <label><span>Khu vực</span>
                 <select required id="spRegion">
-                  <option value="">Chọn</option>
-                  <option>ĐBSCL</option>
-                  <option>Miền Nam</option>
-                  <option>Miền Trung</option>
-                  <option>Miền Bắc</option>
+                  <option value="">Chọn</option><option>ĐBSCL</option><option>Miền Nam</option><option>Miền Trung</option><option>Miền Bắc</option>
                 </select>
               </label>
-              <label><span>Ghi chú</span><input id="spNote" placeholder="Quy mô trại, loài nuôi..." /></label>
+              <label><span>Ghi chú</span><input id="spNote" placeholder="Quy mô trại, loài nuôi..."/></label>
             </div>
-            <div class="k-m2"><button class="btn green" type="submit">Đặt lịch</button></div>
-            <div id="supportMsg" class="muted k-m" role="status" aria-live="polite"></div>
+            <div class="k-m"><button class="btn green" type="submit">Đặt lịch</button></div>
+            <div id="supportMsg" class="hint k-m" role="status"></div>
           </form>
-
-          <div class="card pad lift reveal" role="region" aria-label="Kỹ thuật viên theo khu vực">
-            <b>Kỹ thuật viên theo khu vực</b>
-            <ul class="k-m muted" id="techList" style="line-height:1.9">
-              <!-- JS render -->
-            </ul>
-          </div>
         </div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         LOGISTICS — Công cụ Tính Logistics & Kho bãi
-         ======================================================== -->
-    <section id="logistics" class="section" aria-label="Công cụ Tính Logistics & Kho bãi">
+    <!-- ============ LOGISTICS ============ -->
+    <section id="logistics" class="section">
       <div class="container">
-        <div class="title reveal"><span class="bar"></span><span>Công cụ Tính Logistics & Kho bãi</span></div>
-        <div class="title-underline k-m reveal"></div>
+        <div class="title reveal"><span class="bar"></span><span>Công cụ Tính Logistics & Kho Bãi</span></div>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
 
-        <form id="logiForm" class="card pad k-m3 lift reveal" style="max-width:980px" aria-label="Form tính logistics">
+        <form id="logiForm" class="card pad k-m lift reveal" style="max-width:900px">
           <div class="row col-3">
-            <label><span>Số lượng (tấn)</span><input type="number" min="1" id="qtyTon" value="50" required /></label>
-            <label><span>Địa điểm giao</span><select id="destSelect" aria-label="Chọn điểm giao"></select></label>
-            <label><span>Ưu tiên</span>
-              <select id="prio">
-                <option value="fast">Nhanh nhất</option>
-                <option value="cheap">Chi phí thấp</option>
-              </select>
-            </label>
+            <label><span>Số lượng (tấn)</span><input type="number" min="1" id="qtyTon" value="50"/></label>
+            <label><span>Địa điểm giao</span><select id="destSelect"></select></label>
+            <div style="align-self:end"><button class="btn primary" type="submit" style="width:100%">Tính mô phỏng</button></div>
           </div>
-          <div class="k-m2"><button class="btn primary" type="submit" style="width:100%">Tính mô phỏng</button></div>
-          <div id="logiResult" class="row col-4 k-m3" style="display:none"></div>
+          <div id="logiResult" class="row col-4 k-m" style="display:none"></div>
         </form>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         NEWS — Tin tức ngành & phân tích thị trường
-         ======================================================== -->
-    <section id="news" class="section" aria-label="Tin tức ngành & phân tích thị trường">
+    <!-- ============ NEWS ============ -->
+    <section id="news" class="section muted">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Tin tức ngành & phân tích thị trường</span></div>
-        <div class="title-underline k-m reveal"></div>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
 
-        <div class="k-m3 reveal" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
-          <label style="min-width:240px;flex:1 1 240px">
-            <span>Chủ đề</span><select id="newsFilter" aria-label="Chọn chủ đề"></select>
-          </label>
-          <label style="min-width:260px;flex:2 1 320px">
-            <span>Tìm kiếm</span><input id="newsSearch" placeholder="Nhập từ khóa, ví dụ: 'bột cá', 'xuất khẩu'..." />
-          </label>
-          <div class="pill" id="newsCount" aria-live="polite">0 bài</div>
+        <div class="k-m reveal" style="display:flex;align-items:center;gap:10px">
+          <label style="max-width:240px"><span>Chủ đề</span><select id="newsFilter"></select></label>
         </div>
-
-        <div class="row col-3 k-m3" id="newsList" aria-live="polite">
-          <noscript><div class="card pad">Vui lòng bật JavaScript để xem tin tức.</div></noscript>
-        </div>
+        <div class="row col-3 k-m" id="newsList"></div>
       </div>
       <div class="divider"></div>
     </section>
 
-    <!-- ========================================================
-         R&D — Chương trình hợp tác R&D
-         ======================================================== -->
-    <section id="rd" class="section" aria-label="Chương trình hợp tác R&D">
+    <!-- ============ R&D ============ -->
+    <section id="rd" class="section">
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Chương trình hợp tác R&D</span></div>
-        <div class="title-underline k-m reveal"></div>
+        <div class="title-underline reveal" style="margin-top:10px"></div>
 
-        <div class="row col-2 k-m3">
-          <div class="card pad lift reveal" role="region" aria-label="Giới thiệu R&D">
+        <div class="row col-2 k-m">
+          <div class="card pad lift reveal">
             <b>Giới thiệu</b>
-            <ul class="k-m muted" style="line-height:1.9">
-              <li>Đồng phát triển công thức theo loài/giai đoạn, tối ưu FCR và chi phí.</li>
-              <li>Thử nghiệm thực địa có giám sát, KPI minh bạch, báo cáo định kỳ.</li>
-              <li>Chia sẻ dữ liệu (ẩn danh), công bố khoa học cùng đối tác.</li>
+            <ul class="k-m hint" style="line-height:1.9">
+              <li>Đồng phát triển công thức cho từng loài/giai đoạn.</li>
+              <li>Thử nghiệm thực địa có giám sát KPI rõ ràng.</li>
+              <li>Chia sẻ dữ liệu (ẩn danh) và công bố khoa học.</li>
             </ul>
           </div>
 
-          <form id="rdForm" class="card pad lift reveal" aria-label="Form đăng ký hợp tác R&D">
+          <form id="rdForm" class="card pad lift reveal">
             <b>Đăng ký hợp tác</b>
-            <label class="k-m2"><span>Tổ chức/Đơn vị</span><input required id="rdOrg" placeholder="Viện/Trường/Doanh nghiệp" /></label>
-            <label class="k-m"><span>Người liên hệ</span><input required id="rdContact" placeholder="Họ tên & Email" /></label>
-            <label class="k-m"><span>Đề xuất ngắn gọn</span><textarea required id="rdProposal" rows="5" placeholder="Mục tiêu, quy mô, thời gian..."></textarea></label>
-            <div class="k-m2"><button class="btn green" type="submit">Gửi đề xuất</button></div>
-            <div id="rdMsg" class="muted k-m" role="status" aria-live="polite"></div>
+            <label class="k-m"><span>Tổ chức/Đơn vị</span><input required id="rdOrg" placeholder="Viện/Trường/Doanh nghiệp"/></label>
+            <label class="k-m"><span>Người liên hệ</span><input required id="rdContact" placeholder="Họ tên & Email"/></label>
+            <label class="k-m"><span>Đề xuất ngắn gọn</span><textarea required id="rdProposal" rows="4" placeholder="Mục tiêu, quy mô, thời gian..."></textarea></label>
+            <div class="k-m"><button class="btn green" type="submit">Gửi đề xuất</button></div>
+            <div id="rdMsg" class="hint k-m" role="status"></div>
           </form>
         </div>
       </div>
       <div class="divider"></div>
     </section>
-
   </main>
 
-  <!-- ========================================================
-       FOOTER
-       ======================================================== -->
-  <footer class="section" aria-label="Chân trang">
+  <!-- ============ FOOTER ============ -->
+  <footer class="section">
     <div class="container">
-      <div class="row col-3">
+      <div class="credits">
         <div>
           <div class="brand"><div class="mark"><span class="a" style="color:var(--kb-blue)">KING</span><span class="b" style="color:var(--kb-green)">BULL</span></div></div>
-          <div class="muted k-m">“Đột phá tăng trưởng, dẫn đầu lợi nhuận”</div>
+          <div class="hint">“Đột phá tăng trưởng, dẫn đầu lợi nhuận”</div>
         </div>
-        <div class="muted">
+        <div class="hint">
           <div><b>Doanh nghiệp:</b> CÔNG TY TNHH KINGBULL VIỆT NAM</div>
           <div><b>MST:</b> 1801608521</div>
           <div><b>Địa chỉ:</b> Tầng 6, số 41, CMT8, P. Cái Khế, TP Cần Thơ, Việt Nam</div>
         </div>
-        <div class="muted">
+        <div class="hint">
           <div><b>Email:</b> admin@kingbull.com.vn</div>
           <div><b>Điện thoại:</b> 058.708.5649</div>
-          <div class="k-m" style="display:flex;gap:10px;flex-wrap:wrap">
-            <a class="btn ghost" href="tel:+84587085649">Hotline</a>
-            <a class="btn ghost" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Zalo OA</a>
+          <div class="k-m" style="display:flex;gap:8px">
+            <a class="btn" href="tel:+84587085649">Hotline</a>
+            <a class="btn" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Zalo OA</a>
           </div>
         </div>
       </div>
-      <div class="muted k-m2">© <span id="year"></span> KINGBULL Việt Nam. All rights reserved.</div>
+      <div class="hint k-m">© <span id="year"></span> KINGBULL Việt Nam. All rights reserved.</div>
     </div>
   </footer>
 
-  <!-- ========================================================
-       MODAL (Case Detail)
-       ======================================================== -->
-  <div id="modal" class="modal" aria-modal="true" role="dialog" hidden
-       style="position:fixed;inset:0;background:rgba(9,12,20,.55);display:none;align-items:flex-start;justify-content:center;padding:40px;z-index:1200">
-    <div class="panel" style="max-width:980px;width:100%;border-radius:18px;background:#0f1d33;border:1px solid var(--stroke);
-                               max-height:calc(100vh - 80px); overflow:auto; box-shadow:var(--shadow-3)">
-      <div class="pad" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--stroke);position:sticky;top:0;background:#0f1d33;z-index:1">
-        <div>
-          <b id="mdTitle">Chi tiết dự án</b>
-          <div class="muted" id="mdSub"></div>
-        </div>
-        <button class="btn ghost" id="mdClose" aria-label="Đóng">Đóng</button>
+  <!-- ============ MODAL ============ -->
+  <div id="modal" class="modal" aria-modal="true" role="dialog" hidden>
+    <div class="panel">
+      <div class="pad" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--stroke);">
+        <div><b id="mdTitle">Chi tiết dự án</b><div class="hint" id="mdSub"></div></div>
+        <button class="btn" id="mdClose" aria-label="Đóng">Đóng</button>
       </div>
       <div id="mdBody" class="pad"></div>
     </div>
   </div>
 
-  <!-- ========================================================
+  <!-- ============================================================
        SCRIPTS
-       ======================================================== -->
+       ============================================================ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     /* ------------------------------------------------------------
-       DATA (dummy theo tài liệu)
+       Data (dummy)
        ------------------------------------------------------------ */
     const CASE_STUDIES = [
       { id:1, name:"Ao nuôi cá tra A1 - Cần Thơ", species:"Cá tra", areaHa:5, cycleDays:180, harvestTons:600, fcr:1.5, feedCostPerKg:12000, pricePerKg:25000, started:"2024-03-01", finished:"2024-08-30",
@@ -921,13 +564,6 @@
       { id:"dst5", name:"Hải Dương (cá lóc)", region:"Miền Bắc", lat:20.938, lng:106.320 },
     ];
 
-    const TECHNICIANS = [
-      { region:"ĐBSCL", name:"Trần Quốc Bảo", phone:"0903 000 111" },
-      { region:"Miền Nam", name:"Nguyễn Hải Đăng", phone:"0904 222 333" },
-      { region:"Miền Trung", name:"Phạm Thanh Hòa", phone:"0905 444 555" },
-      { region:"Miền Bắc", name:"Lê Văn Kiên", phone:"0906 666 777" },
-    ];
-
     const NEWS = [
       { id:"n1", tag:"Giá nguyên liệu", title:"Bột cá ổn định, dầu đậu nành tăng nhẹ",
         date:"2025-07-28", excerpt:"Giá dầu đậu nành tăng 2.1% do nguồn cung thắt chặt; bột cá giữ mức ổn định theo quý." },
@@ -935,18 +571,15 @@
         date:"2025-07-15", excerpt:"Các nhà nhập khẩu tăng đơn hàng dòng premium; yêu cầu chứng nhận truy xuất nguồn gốc." },
       { id:"n3", tag:"Dịch bệnh", title:"Cảnh báo Vibrio vùng ven biển miền Trung",
         date:"2025-06-30", excerpt:"Khuyến nghị tăng cường sát trùng, quản trị tảo, bổ sung probiotics giai đoạn chuyển mùa." },
-      { id:"n4", tag:"Xuất khẩu", title:"Thị trường EU mở lại quota cá tra chế biến",
-        date:"2025-06-20", excerpt:"Quota thí điểm 6 tháng, kiểm soát kháng sinh chặt chẽ, truy xuất full-chain." },
     ];
 
     /* ------------------------------------------------------------
-       HELPERS
+       Helpers (vanilla)
        ------------------------------------------------------------ */
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
     const fmtVND = n => (Math.round(n)).toLocaleString("vi-VN")+" ₫";
     const ceil = Math.ceil;
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
     function distanceKm(a,b){
       const toRad = d=>d*Math.PI/180, R=6371;
@@ -956,12 +589,13 @@
     }
 
     /* ------------------------------------------------------------
-       NAV behaviors: active highlight + mobile select + shrink header
+       Landing nav behaviors
        ------------------------------------------------------------ */
+    // active section highlight
     function setupActiveNav(){
-      const ids = ["home","cases","library","videos","dealer","supply","support","logistics","news","rd"];
-      const sections = ids.map(id=>$("#"+id));
+      const sections = ["home","cases","library","videos","dealer","supply","support","logistics","news","rd"].map(id=>$("#"+id));
       const navLinks = $$(".nav-link");
+      const map = new Map(sections.map(s=>[s.id, s]));
       const io = new IntersectionObserver((entries)=>{
         entries.forEach(e=>{
           if(e.isIntersecting){
@@ -969,49 +603,46 @@
             navLinks.forEach(a => a.setAttribute("aria-current", a.getAttribute("href")==="#"+id ? "page" : "false"));
           }
         });
-      }, {rootMargin:"-52% 0px -48% 0px", threshold:[0,.25,.5,.75,1]});
-      sections.forEach(s=> io.observe(s));
+      }, {rootMargin:"-48% 0px -48% 0px", threshold: [0, .25, .5, .75, 1]});
+      sections.forEach(s=>io.observe(s));
 
-      $("#mobileSelect").addEventListener("change",(e)=> location.hash = e.target.value);
+      // mobile select
+      $("#mobileSelect").addEventListener("change", (e)=> location.hash = e.target.value);
     }
+
+    // header shrink on scroll + parallax hero title
     function setupScrollFX(){
       const navbar = $("#navbar");
       const heroTitle = $("#heroTitle");
       window.addEventListener("scroll", ()=>{
         const y = window.scrollY || document.documentElement.scrollTop;
-        navbar.classList.toggle("shrink", y>10);
-        const amt = clamp(y/420, 0, 1);
+        if(y>10) navbar.classList.add("shrink"); else navbar.classList.remove("shrink");
+        // parallax transform (small)
+        const amt = Math.min(1, y/400);
         heroTitle.style.transform = `translateY(${amt*6}px)`;
         heroTitle.style.opacity = String(1 - amt*0.15);
       }, {passive:true});
     }
+
+    // scroll reveal
     function setupReveal(){
       const io = new IntersectionObserver((entries)=>{
         entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("inview"); io.unobserve(e.target); } });
-      }, {rootMargin:"-10% 0px -10% 0px", threshold: 0.12});
-      $$(".reveal").forEach(el=> io.observe(el));
+      }, {rootMargin:"-10% 0px -10% 0px", threshold: 0.1});
+      $$(".reveal").forEach(el=>io.observe(el));
     }
 
     /* ------------------------------------------------------------
-       CASE STUDIES: render + filters + modal
+       Renderers
        ------------------------------------------------------------ */
     function renderCaseStudies(){
       const speciesList = ["Tất cả", ...new Set(CASE_STUDIES.map(c=>c.species))];
-      const spSel = $("#caseFilter");
-      speciesList.forEach(s=> spSel.append(new Option(s,s)));
-      const search = $("#caseSearch");
-      spSel.addEventListener("change", draw);
-      search.addEventListener("input", draw);
+      speciesList.forEach(s=>$("#caseFilter").append(new Option(s,s)));
+      $("#caseFilter").addEventListener("change", draw);
       draw();
-
       function draw(){
-        const f = spSel.value || "Tất cả";
-        const q = (search.value || "").toLowerCase().trim();
-        const data = CASE_STUDIES.filter(x=>
-          (f==="Tất cả" || x.species===f) &&
-          (q==="" || x.name.toLowerCase().includes(q))
-        );
-        $("#caseCount").textContent = `${data.length} dự án`;
+        const f = $("#caseFilter").value || "Tất cả";
+        const data = CASE_STUDIES.filter(x=> f==="Tất cả" || x.species===f);
         const wrap = $("#caseList"); wrap.innerHTML="";
         data.forEach(item=>{
           const revenue = item.harvestTons*1000*item.pricePerKg;
@@ -1020,15 +651,15 @@
 
           const d=document.createElement("div"); d.className="card pad lift reveal";
           d.innerHTML = `
-            <img class="w-full" style="aspect-ratio:16/9;border-radius:12px;object-fit:cover;border:1px solid var(--stroke)" src="${item.images[0]}" alt="Ao nuôi - ${item.name}">
+            <img class="thumb" src="${item.images[0]}" alt="Ao nuôi - ${item.name}">
             <div class="k-m"><b>${item.name}</b> <span class="pill">${item.species}</span></div>
-            <div class="k-m muted">Diện tích: <b>${item.areaHa} ha</b> • Chu kỳ: <b>${item.cycleDays} ngày</b> • Sản lượng: <b>${item.harvestTons} tấn</b> • FCR: <b>${item.fcr}</b></div>
+            <div class="k-m hint">Diện tích: <b>${item.areaHa} ha</b> • Chu kỳ: <b>${item.cycleDays} ngày</b> • Sản lượng: <b>${item.harvestTons} tấn</b> • FCR: <b>${item.fcr}</b></div>
             <div class="row col-3 k-m">
-              <div class="card pad-sm"><small class="muted">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
-              <div class="card pad-sm"><small class="muted">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
-              <div class="card pad-sm"><small class="muted">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
+              <div class="card pad"><small class="hint">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
+              <div class="card pad"><small class="hint">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
+              <div class="card pad"><small class="hint">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
             </div>
-            <div class="k-m2"><button class="btn primary" data-open="${item.id}">Xem chi tiết</button></div>
+            <div class="k-m"><button class="btn primary" data-open="${item.id}">Xem chi tiết</button></div>
           `;
           wrap.appendChild(d);
         });
@@ -1048,38 +679,36 @@
       const feedCost = item.harvestTons*1000*item.fcr*item.feedCostPerKg;
       const net = revenue - feedCost; const roi = net/feedCost*100;
       $("#mdBody").innerHTML = `
-        <div class="grid" style="grid-template-columns:1fr; gap:0">
-          <iframe title="Video - ${item.name}" style="width:100%; aspect-ratio:16/9; border:0"
-            src="${item.video}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        <div class="md-grid">
+          <div>
+            <iframe title="Video - ${item.name}" class="thumb" style="border-radius:0"
+              src="${item.video}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
           <div class="pad">
-            <div class="muted">${item.ownerNote}</div>
-            <div class="row col-2 k-m2">
-              <div class="card pad-sm"><small class="muted">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
-              <div class="card pad-sm"><small class="muted">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
-              <div class="card pad-sm"><small class="muted">Lợi nhuận (ước)</small><div><b>${fmtVND(net)}</b></div></div>
-              <div class="card pad-sm"><small class="muted">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
+            <div class="hint">${item.ownerNote}</div>
+            <div class="row col-2 k-m">
+              <div class="card pad"><small class="hint">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
+              <div class="card pad"><small class="hint">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
+              <div class="card pad"><small class="hint">Lợi nhuận (ước)</small><div><b>${fmtVND(net)}</b></div></div>
+              <div class="card pad"><small class="hint">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
             </div>
-            <div class="k-m2">
+            <div class="k-m">
               <b>Ghi chú kỹ thuật</b>
-              <ul class="k-m muted" style="line-height:1.9">
-                <li>Quản trị oxy hòa tan > 5 mg/L; cho ăn theo đường cong tăng trưởng.</li>
-                <li>Điều chỉnh FCR theo cỡ cá; bổ sung enzymes & probiotics khi chuyển cỡ.</li>
+              <ul class="k-m hint" style="line-height:1.9">
+                <li>Quản trị oxy hòa tan > 5 mg/L, cho ăn theo đường cong tăng trưởng.</li>
+                <li>Tối ưu FCR theo cỡ cá, bổ sung enzymes & probiotics khi chuyển cỡ.</li>
                 <li>Theo dõi NH₃/NH₄⁺, NO₂⁻; độ kiềm 80–120 mg/L.</li>
               </ul>
             </div>
           </div>
         </div>
       `;
-      const modal = $("#modal"); modal.hidden=false; modal.style.display="flex"; $("#mdClose").focus();
+      const modal = $("#modal"); modal.hidden=false; modal.classList.add("active"); $("#mdClose").focus();
     }
-    $("#mdClose").addEventListener("click", closeModal);
-    $("#modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeModal(); });
-    document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
-    function closeModal(){ const modal=$("#modal"); modal.style.display="none"; modal.hidden=true; }
+    $("#mdClose").addEventListener("click", ()=> { $("#modal").classList.remove("active"); $("#modal").hidden=true; });
+    $("#modal").addEventListener("click", (e)=>{ if(e.target.id==="modal"){ $("#modal").classList.remove("active"); $("#modal").hidden=true; }});
+    document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ $("#modal").classList.remove("active"); $("#modal").hidden=true; }});
 
-    /* ------------------------------------------------------------
-       PDF LIBRARY
-       ------------------------------------------------------------ */
     function renderPDF(){
       const species = ["Tất cả", ...new Set(PDF_LIBRARY.map(x=>x.species))];
       const stages  = ["Tất cả", ...new Set(PDF_LIBRARY.map(x=>x.stage))];
@@ -1109,23 +738,17 @@
       }
     }
 
-    /* ------------------------------------------------------------
-       VIDEO
-       ------------------------------------------------------------ */
     function renderVideos(){
       const wrap=$("#videoList"); wrap.innerHTML="";
       VIDEO_GALLERY.forEach(v=>{
         const c=document.createElement("div"); c.className="card pad lift reveal";
         c.innerHTML = `
-          <iframe title="${v.title}" style="width:100%; aspect-ratio:16/9; border:0" src="${v.src}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          <iframe title="${v.title}" class="thumb" src="${v.src}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
           <div class="k-m"><b>${v.title}</b></div>`;
         wrap.appendChild(c);
       });
     }
 
-    /* ------------------------------------------------------------
-       DEALER (mock)
-       ------------------------------------------------------------ */
     function renderDealer(){
       const box=$("#dealerBox"); box.innerHTML="";
       const state = { logged:false };
@@ -1135,10 +758,10 @@
         if(!state.logged){
           const f=document.createElement("form"); f.className="card pad lift reveal"; f.innerHTML = `
             <b>Đăng nhập</b>
-            <label class="k-m2"><span>Email</span><input type="email" id="dlEmail" required placeholder="you@company.com" /></label>
+            <label class="k-m"><span>Email</span><input type="email" id="dlEmail" required placeholder="you@company.com" /></label>
             <label class="k-m"><span>Mã truy cập</span><input type="password" id="dlCode" required placeholder="KINGBULL2025" /></label>
-            <div id="dlMsg" class="muted k-m" role="status"></div>
-            <div class="k-m2"><button class="btn primary" type="submit">Đăng nhập</button></div>`;
+            <div id="dlMsg" class="hint k-m" role="status"></div>
+            <div class="k-m"><button class="btn primary" type="submit">Đăng nhập</button></div>`;
           f.addEventListener("submit",e=>{
             e.preventDefault();
             const ok = $("#dlCode").value.trim().toUpperCase()==="KINGBULL2025" && $("#dlEmail").value.includes("@");
@@ -1150,7 +773,7 @@
           g.innerHTML = `
             <div class="card pad lift reveal">
               <b>Tài liệu nội bộ</b>
-              <ul class="k-m muted" style="line-height:1.9">
+              <ul class="k-m hint" style="line-height:1.9">
                 <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Bảng giá số lượng lớn (PDF)</a></li>
                 <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Chính sách chiết khấu (PDF)</a></li>
                 <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Tài liệu huấn luyện kỹ thuật (PDF)</a></li>
@@ -1158,9 +781,9 @@
             </div>
             <div class="card pad lift reveal">
               <b>Video Training</b>
-              <ul class="k-m muted" style="line-height:1.9">
-                <li><a href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank" rel="noreferrer">Phối trộn & kiểm soát chất lượng</a></li>
-                <li><a href="https://www.youtube.com/watch?v=oUFJJNQGwhk" target="_blank" rel="noreferrer">Vận hành kho lạnh & an toàn</a></li>
+              <ul class="k-m hint" style="line-height:1.9">
+                <li><a href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank">Phối trộn & kiểm soát chất lượng</a></li>
+                <li><a href="https://www.youtube.com/watch?v=oUFJJNQGwhk" target="_blank">Vận hành kho lạnh & an toàn</a></li>
               </ul>
             </div>`;
           box.appendChild(g);
@@ -1168,9 +791,7 @@
       }
     }
 
-    /* ------------------------------------------------------------
-       MAP (Leaflet)
-       ------------------------------------------------------------ */
+    /* Map */
     let mapInstance=null, layerGroup=null;
     function initMapOnce(){
       if(mapInstance) return;
@@ -1187,30 +808,17 @@
         const mk = L.marker([w.lat,w.lng]).addTo(layerGroup); mk.bindPopup(`<b>${w.name}</b><br/>Khu vực: ${w.region}`);
       });
       DESTINATIONS.filter(d => region==="Tất cả" || d.region===region).forEach(d=>{
-        const mk = L.circleMarker([d.lat,d.lng],{radius:8,color:"#0EA4E8"}).addTo(layerGroup);
-        mk.bindPopup(`<b>${d.name}</b><br/>Khu vực: ${d.region}`);
+        const mk = L.circleMarker([d.lat,d.lng],{radius:8,color:"#0EA4E8"}).addTo(layerGroup); mk.bindPopup(`<b>${d.name}</b><br/>Khu vực: ${d.region}`);
       });
     }
 
-    /* ------------------------------------------------------------
-       SUPPORT form + technician list
-       ------------------------------------------------------------ */
+    /* Support */
     $("#supportForm").addEventListener("submit", e=>{
       e.preventDefault();
       $("#supportMsg").textContent = "Đã nhận yêu cầu! Kỹ thuật viên khu vực sẽ liên hệ sớm.";
     });
-    function renderTechs(){
-      const ul = $("#techList"); ul.innerHTML="";
-      TECHNICIANS.forEach(t=>{
-        const li = document.createElement("li");
-        li.innerHTML = `<b>${t.region}</b>: ${t.name} — ${t.phone}`;
-        ul.appendChild(li);
-      });
-    }
 
-    /* ------------------------------------------------------------
-       LOGISTICS calculator
-       ------------------------------------------------------------ */
+    /* Logistics */
     function renderLogistics(){
       const destSel = $("#destSelect"); DESTINATIONS.forEach(d=>destSel.append(new Option(d.name,d.id)));
       $("#logiForm").addEventListener("submit", e=>{
@@ -1218,33 +826,11 @@
         const qty = Math.max(1, Number($("#qtyTon").value||0));
         const dest = DESTINATIONS.find(d=>d.id===destSel.value);
         let best=null, bestD=Infinity;
-
-        // ưu tiên nhanh: chọn kho gần nhất; ưu tiên rẻ: ưu tiên kho ĐBSCL nếu cùng miền, rồi khoảng cách
-        const prio = $("#prio").value;
-
-        if(prio==="cheap"){
-          const candidates = WAREHOUSES
-            .map(w=>({w, d:distanceKm({lat:w.lat,lng:w.lng},{lat:dest.lat,lng:dest.lng})}))
-            .sort((a,b)=> a.d-b.d);
-          // ưu tiên ĐBSCL nếu điểm ở ĐBSCL
-          if(dest.region==="ĐBSCL"){
-            const m = candidates.find(c=>c.w.region==="ĐBSCL") || candidates[0];
-            best = m.w; bestD = m.d;
-          } else {
-            best = candidates[0].w; bestD = candidates[0].d;
-          }
-        } else {
-          WAREHOUSES.forEach(w=>{ const d=distanceKm({lat:w.lat,lng:w.lng},{lat:dest.lat,lng:dest.lng}); if(d<bestD){bestD=d; best=w;} });
-        }
-
+        WAREHOUSES.forEach(w=>{ const d=distanceKm({lat:w.lat,lng:w.lng},{lat:dest.lat,lng:dest.lng}); if(d<bestD){bestD=d; best=w;} });
         const capacityPerContainerTon = 25;
         const trips = ceil(qty / capacityPerContainerTon);
-        const avgSpeedKmPerHour = 45;
-        const hours = bestD/avgSpeedKmPerHour + 2; // +2h thao tác bốc xếp
+        const hours = bestD/45 + 2;
         const etaDays = Math.max(1, Math.round(hours/8));
-        const estCostPerKm = prio==="cheap" ? 18_000 : 20_000; // đ/ km (mô phỏng)
-        const estCost = Math.round(bestD * estCostPerKm * trips);
-
         const R=$("#logiResult"); R.style.display="grid"; R.innerHTML="";
         [
           {label:"Kho xuất phát", value:best.name},
@@ -1252,56 +838,41 @@
           {label:"Khoảng cách (km)", value:Math.round(bestD)},
           {label:"Số chuyến (ước)", value:trips},
           {label:"Thời gian giao (ngày)", value:etaDays},
-          {label:"Chi phí vận chuyển (ước)", value:fmtVND(estCost)},
         ].forEach(s=>{
           const c=document.createElement("div"); c.className="card pad lift reveal";
-          c.innerHTML=`<small class="muted">${s.label}</small><div class="k-m"><b>${s.value}</b></div>`;
+          c.innerHTML=`<small class="hint">${s.label}</small><div><b>${s.value}</b></div>`;
           R.appendChild(c);
         });
       });
     }
 
-    /* ------------------------------------------------------------
-       NEWS render + filters
-       ------------------------------------------------------------ */
+    /* News */
     function renderNews(){
       const tags = ["Tất cả", ...new Set(NEWS.map(n=>n.tag))];
       const nf = $("#newsFilter"); tags.forEach(t=>nf.append(new Option(t,t)));
-      const ns = $("#newsSearch");
-      nf.addEventListener("change", draw);
-      ns.addEventListener("input", draw);
-      draw();
-
+      nf.addEventListener("change", draw); draw();
       function draw(){
         const f = nf.value || "Tất cả";
-        const q = (ns.value||"").toLowerCase().trim();
-        const data = NEWS.filter(n=>
-          (f==="Tất cả" || n.tag===f) && (q==="" || (n.title+n.excerpt).toLowerCase().includes(q))
-        );
-        $("#newsCount").textContent = `${data.length} bài`;
+        const data = NEWS.filter(n=> f==="Tất cả" || n.tag===f);
         const wrap=$("#newsList"); wrap.innerHTML="";
         data.forEach(n=>{
           const c=document.createElement("div"); c.className="card pad lift reveal";
           c.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="pill">${n.tag}</span><span class="muted">${n.date}</span></div>
+            <span class="pill">${n.tag}</span><span class="hint">${n.date}</span></div>
             <div class="k-m"><b>${n.title}</b></div>
-            <div class="muted">${n.excerpt}</div>`;
+            <div class="hint">${n.excerpt}</div>`;
           wrap.appendChild(c);
         });
       }
     }
 
-    /* ------------------------------------------------------------
-       R&D form
-       ------------------------------------------------------------ */
+    /* R&D */
     $("#rdForm").addEventListener("submit", e=>{
       e.preventDefault();
       $("#rdMsg").textContent = "Đã nhận thông tin! Chúng tôi sẽ phản hồi qua email.";
     });
 
-    /* ------------------------------------------------------------
-       BOOT
-       ------------------------------------------------------------ */
+    /* Boot */
     function init(){
       setupActiveNav();
       setupScrollFX();
@@ -1311,11 +882,10 @@
       renderPDF();
       renderVideos();
       renderDealer();
-      renderTechs();
       renderLogistics();
       renderNews();
 
-      // Map lazy-load: khi tới gần khu vực supply
+      // Load map lazily when approaching supply section
       const mapSection = $("#supply");
       const io = new IntersectionObserver((entries)=>{
         if(entries.some(e=>e.isIntersecting)){ initMapOnce(); io.disconnect(); }
@@ -1325,11 +895,12 @@
       // Footer year
       $("#year").textContent = new Date().getFullYear();
 
-      // Anchor fix cho mobile select nếu mở bằng hash
+      // Anchor fix for mobile select (if loaded with hash)
       if(location.hash){ const el = $(location.hash); if(el) el.scrollIntoView(); }
     }
     document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
+
 
