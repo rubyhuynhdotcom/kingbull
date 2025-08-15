@@ -4,10 +4,10 @@
   - Sticky navbar (no slogan near logo)
   - Smooth scroll + active section highlight
   - Hero with animated mesh gradient + parallax text
-  - Case Studies grid + Modal detail (ROI calc)
+  - Case Studies grid + Modal detail (ROI calc with chart & KPIs)
   - Technical PDF library (filters)
   - Video gallery
-  - Dealer Portal (mock login)
+  - Dealer Portal (mock login with mini-dashboard)
   - Supply Map (Leaflet)
   - 24/7 Support form
   - Logistics calculator (distance + ETA + container trips)
@@ -184,7 +184,7 @@
       max-width:980px;width:100%;border-radius:18px;background:#fff;border:1px solid var(--stroke);
       max-height:calc(100vh - 80px); overflow:auto; box-shadow:var(--shadow-2)
     }
-    .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .md-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:0}
     @media(max-width:900px){ .md-grid{grid-template-columns:1fr} }
     @media(max-width:680px){ .modal{padding:16px} }
 
@@ -203,6 +203,20 @@
     ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#cfe9fb,#bff0cd); border-radius:10px; border:3px solid transparent; background-clip:content-box}
     ::-webkit-scrollbar-track{background:transparent}
 
+    /* [NEW] Styles for ROI Chart in Modal */
+    .chart-wrapper{margin-top:20px}
+    .chart-container{display:flex;gap:16px;align-items:flex-end;height:120px;border-bottom:1px solid var(--stroke);padding-bottom:10px}
+    .chart-bar{width:100%;border-radius:6px 6px 0 0;position:relative;transition:height .5s var(--bezier)}
+    .chart-bar .label{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:4px;background:var(--text);color:#fff;padding:2px 6px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+    .chart-bar.revenue{background:linear-gradient(180deg, var(--kb-green), #24a845)}
+    .chart-bar.cost{background:linear-gradient(180deg, var(--kb-gold), #d19d00)}
+    .chart-legend{display:flex;gap:16px;margin-top:8px;font-size:12px}
+    .legend-item{display:flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:99px}
+    .kpi-table{width:100%;border-collapse:collapse;margin-top:14px}
+    .kpi-table td{padding:8px;border-bottom:1px solid var(--stroke);font-size:13px}
+    .kpi-table td:last-child{text-align:right;font-weight:700}
+
     /* Reduced motion preference */
     @media (prefers-reduced-motion: reduce){
       .reveal{opacity:1; transform:none; filter:none; transition:none}
@@ -210,6 +224,7 @@
       html{scroll-behavior:auto}
       .btn,.lift{transition:none}
       header.nav{transition:none}
+      .chart-bar{transition:none}
     }
   </style>
 </head>
@@ -347,8 +362,8 @@
       <div class="container">
         <div class="title reveal"><span class="bar"></span><span>Khu vực Dành cho Đại lý & Trang trại</span></div>
         <div class="title-underline reveal" style="margin-top:10px"></div>
-        <p class="hint reveal">Đăng nhập mock để xem tài liệu nội bộ (bảng giá, policy, training)</p>
-        <div id="dealerBox" class="k-m reveal"></div>
+        <p class="hint reveal">Đăng nhập để xem tài liệu nội bộ (bảng giá, policy, training)</p>
+        <div id="dealerBox" class="k-m reveal" style="max-width:800px"></div>
       </div>
       <div class="divider"></div>
     </section>
@@ -377,7 +392,7 @@
         <div class="title reveal"><span class="bar"></span><span>Hỗ trợ kỹ thuật 24/7</span></div>
         <div class="title-underline reveal" style="margin-top:10px"></div>
 
-        <div class="row col-3 k-m" style="grid-template-columns: 1fr 2fr">
+        <div class="row col-3" style="grid-template-columns: 1fr 2fr">
           <div class="card pad lift reveal">
             <b>Liên hệ nhanh</b>
             <div class="k-m" style="display:grid;gap:8px">
@@ -517,29 +532,34 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     /* ------------------------------------------------------------
-       Data (dummy)
+       Data (dummy, expanded)
        ------------------------------------------------------------ */
     const CASE_STUDIES = [
-      { id:1, name:"Ao nuôi cá tra A1 - Cần Thơ", species:"Cá tra", areaHa:5, cycleDays:180, harvestTons:600, fcr:1.5, feedCostPerKg:12000, pricePerKg:25000, started:"2024-03-01", finished:"2024-08-30",
+      { id:1, name:"Ao nuôi cá tra A1 - Cần Thơ", species:"Cá tra", areaHa:5, cycleDays:180, harvestTons:600, fcr:1.5, feedCostPerKg:12000, pricePerKg:25000, survivalRate: 0.85, started:"2024-03-01", finished:"2024-08-30",
         images:["https://images.unsplash.com/photo-1593262109328-154f3fb9d29f?q=80&w=1200&auto=format&fit=crop"],
         video:"https://www.youtube.com/embed/1La4QzGeaaQ", ownerNote:"Thức ăn ổn định, tăng trưởng đồng đều, tỷ lệ sống cao." },
-      { id:2, name:"Rô phi siêu thâm canh - Long An", species:"Cá rô phi", areaHa:2.5, cycleDays:150, harvestTons:220, fcr:1.35, feedCostPerKg:11500, pricePerKg:32000, started:"2024-02-15", finished:"2024-07-20",
+      { id:2, name:"Rô phi siêu thâm canh - Long An", species:"Cá rô phi", areaHa:2.5, cycleDays:150, harvestTons:220, fcr:1.35, feedCostPerKg:11500, pricePerKg:32000, survivalRate: 0.92, started:"2024-02-15", finished:"2024-07-20",
         images:["https://images.unsplash.com/photo-1576765608610-5f4e01aa12c4?q=80&w=1200&auto=format&fit=crop"],
         video:"https://www.youtube.com/embed/aqz-KE-bpKQ", ownerNote:"Tối ưu FCR, giảm hao hụt nhờ quản trị nước tốt." },
-      { id:3, name:"Cá lóc thương phẩm - An Giang", species:"Cá lóc", areaHa:1.2, cycleDays:120, harvestTons:95, fcr:1.6, feedCostPerKg:12500, pricePerKg:38000, started:"2024-04-10", finished:"2024-08-10",
+      { id:3, name:"Cá lóc thương phẩm - An Giang", species:"Cá lóc", areaHa:1.2, cycleDays:120, harvestTons:95, fcr:1.6, feedCostPerKg:12500, pricePerKg:38000, survivalRate: 0.90, started:"2024-04-10", finished:"2024-08-10",
         images:["https://images.unsplash.com/photo-1517837016564-bfcf7a7c89d6?q=80&w=1200&auto=format&fit=crop"],
-        video:"https://www.youtube.com/embed/oUFJJNQGwhk", ownerNote:"Tăng trưởng nhanh, màu thịt đẹp, đầu ra ổn định." }
+        video:"https://www.youtube.com/embed/oUFJJNQGwhk", ownerNote:"Tăng trưởng nhanh, màu thịt đẹp, đầu ra ổn định." },
+      { id:4, name:"Tôm sú công nghiệp - Bạc Liêu", species:"Tôm sú", areaHa:3, cycleDays:110, harvestTons:15, fcr:1.7, feedCostPerKg:28000, pricePerKg:220000, survivalRate: 0.80, started:"2024-05-01", finished:"2024-08-20",
+        images:["https://images.unsplash.com/photo-1601841382901-b113458de10a?q=80&w=1200&auto=format&fit=crop"],
+        video:"https://www.youtube.com/embed/1La4QzGeaaQ", ownerNote:"Chất lượng tôm đạt chuẩn xuất khẩu, giá bán cao." },
+      { id:5, name:"Cá diêu hồng lồng bè - Đồng Nai", species:"Cá diêu hồng", areaHa:0.8, cycleDays:160, harvestTons:120, fcr:1.4, feedCostPerKg:11800, pricePerKg:35000, survivalRate: 0.88, started:"2024-03-20", finished:"2024-08-28",
+        images:["https://images.unsplash.com/photo-1499125562588-29fb8a56b5d5?q=80&w=1200&auto=format&fit=crop"],
+        video:"https://www.youtube.com/embed/aqz-KE-bpKQ", ownerNote:"Mô hình lồng bè hiệu quả, cá khỏe, ít bệnh." },
     ];
 
     const PDF_LIBRARY = [
-      { id:"pdf1", title:"Tối ưu FCR theo giai đoạn", species:"Cá tra", stage:"Tăng trưởng", goal:"Tối ưu chi phí",
-        url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { id:"pdf2", title:"Phòng bệnh thường gặp mùa mưa", species:"Cá rô phi", stage:"Phòng bệnh", goal:"An toàn sinh học",
-        url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { id:"pdf3", title:"Quản lý môi trường nước ao đất", species:"Cá lóc", stage:"Môi trường", goal:"Ổn định năng suất",
-        url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { id:"pdf4", title:"Tối ưu vòng quay vốn (360°)", species:"Cá tra", stage:"Tài chính", goal:"Tối ưu vốn",
-        url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id:"pdf1", title:"Tối ưu FCR cho Cá tra", species:"Cá tra", stage:"Tăng trưởng", goal:"Tối ưu chi phí", url:"#"},
+      { id:"pdf2", title:"Phòng bệnh mùa mưa (Cá rô phi)", species:"Cá rô phi", stage:"Phòng bệnh", goal:"An toàn sinh học", url:"#"},
+      { id:"pdf3", title:"Quản lý môi trường ao đất", species:"Cá lóc", stage:"Môi trường", goal:"Ổn định năng suất", url:"#"},
+      { id:"pdf4", title:"Tối ưu vòng quay vốn (360°)", species:"Cá tra", stage:"Tài chính", goal:"Tối ưu vốn", url:"#"},
+      { id:"pdf5", title:"Quản lý dịch bệnh cho Tôm sú", species:"Tôm sú", stage:"Phòng bệnh", goal:"An toàn sinh học", url:"#"},
+      { id:"pdf6", title:"Tăng tỷ lệ sống cho cá giống", species:"Cá diêu hồng", stage:"Ương giống", goal:"Tăng hiệu quả", url:"#"},
+      { id:"pdf7", title:"Tự động hóa cho ăn", species:"Tất cả", stage:"Vận hành", goal:"Tối ưu nhân công", url:"#"},
     ];
 
     const VIDEO_GALLERY = [
@@ -558,19 +578,19 @@
 
     const DESTINATIONS = [
       { id:"dst1", name:"An Giang (cá tra)", region:"ĐBSCL", lat:10.375, lng:105.420 },
-      { id:"dst2", name:"Bạc Liêu (tôm/cá)", region:"ĐBSCL", lat:9.294, lng:105.727 },
+      { id:"dst2", name:"Bạc Liêu (tôm)", region:"ĐBSCL", lat:9.294, lng:105.727 },
       { id:"dst3", name:"Cà Mau (tôm/cá)", region:"ĐBSCL", lat:9.176, lng:105.152 },
       { id:"dst4", name:"Quảng Nam (cá rô phi)", region:"Miền Trung", lat:15.573, lng:108.474 },
       { id:"dst5", name:"Hải Dương (cá lóc)", region:"Miền Bắc", lat:20.938, lng:106.320 },
+      { id:"dst6", name:"Đồng Nai (cá diêu hồng)", region:"Miền Nam", lat:10.95, lng:106.82 },
     ];
 
     const NEWS = [
-      { id:"n1", tag:"Giá nguyên liệu", title:"Bột cá ổn định, dầu đậu nành tăng nhẹ",
-        date:"2025-07-28", excerpt:"Giá dầu đậu nành tăng 2.1% do nguồn cung thắt chặt; bột cá giữ mức ổn định theo quý." },
-      { id:"n2", tag:"Xuất khẩu", title:"Nhu cầu thị trường Trung Đông tăng",
-        date:"2025-07-15", excerpt:"Các nhà nhập khẩu tăng đơn hàng dòng premium; yêu cầu chứng nhận truy xuất nguồn gốc." },
-      { id:"n3", tag:"Dịch bệnh", title:"Cảnh báo Vibrio vùng ven biển miền Trung",
-        date:"2025-06-30", excerpt:"Khuyến nghị tăng cường sát trùng, quản trị tảo, bổ sung probiotics giai đoạn chuyển mùa." },
+      { id:"n1", tag:"Giá nguyên liệu", title:"Bột cá ổn định, dầu đậu nành tăng nhẹ", date:"2025-07-28", excerpt:"Giá dầu đậu nành tăng 2.1% do nguồn cung thắt chặt; bột cá giữ mức ổn định theo quý."},
+      { id:"n2", tag:"Xuất khẩu", title:"Nhu cầu thị trường Trung Đông tăng", date:"2025-07-15", excerpt:"Các nhà nhập khẩu tăng đơn hàng dòng premium; yêu cầu chứng nhận truy xuất nguồn gốc."},
+      { id:"n3", tag:"Dịch bệnh", title:"Cảnh báo Vibrio vùng ven biển miền Trung", date:"2025-06-30", excerpt:"Khuyến nghị tăng cường sát trùng, quản trị tảo, bổ sung probiotics giai đoạn chuyển mùa."},
+      { id:"n4", tag:"Công nghệ", title:"Ứng dụng AI trong quản lý ao nuôi", date:"2025-06-15", excerpt:"Các cảm biến IoT và AI giúp dự báo chất lượng nước và tối ưu hóa lịch cho ăn, giảm FCR tới 5%."},
+      { id:"n5", tag:"Thị trường", title:"Giá cá tra xuất khẩu dự báo tăng cuối năm", date:"2025-05-28", excerpt:"Nhu cầu từ thị trường EU và Mỹ tăng trở lại, dự báo giá cá nguyên liệu sẽ tăng nhẹ trong Quý 4."},
     ];
 
     /* ------------------------------------------------------------
@@ -591,11 +611,9 @@
     /* ------------------------------------------------------------
        Landing nav behaviors
        ------------------------------------------------------------ */
-    // active section highlight
     function setupActiveNav(){
       const sections = ["home","cases","library","videos","dealer","supply","support","logistics","news","rd"].map(id=>$("#"+id));
       const navLinks = $$(".nav-link");
-      const map = new Map(sections.map(s=>[s.id, s]));
       const io = new IntersectionObserver((entries)=>{
         entries.forEach(e=>{
           if(e.isIntersecting){
@@ -605,26 +623,21 @@
         });
       }, {rootMargin:"-48% 0px -48% 0px", threshold: [0, .25, .5, .75, 1]});
       sections.forEach(s=>io.observe(s));
-
-      // mobile select
       $("#mobileSelect").addEventListener("change", (e)=> location.hash = e.target.value);
     }
 
-    // header shrink on scroll + parallax hero title
     function setupScrollFX(){
       const navbar = $("#navbar");
       const heroTitle = $("#heroTitle");
       window.addEventListener("scroll", ()=>{
         const y = window.scrollY || document.documentElement.scrollTop;
         if(y>10) navbar.classList.add("shrink"); else navbar.classList.remove("shrink");
-        // parallax transform (small)
         const amt = Math.min(1, y/400);
         heroTitle.style.transform = `translateY(${amt*6}px)`;
         heroTitle.style.opacity = String(1 - amt*0.15);
       }, {passive:true});
     }
 
-    // scroll reveal
     function setupReveal(){
       const io = new IntersectionObserver((entries)=>{
         entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("inview"); io.unobserve(e.target); } });
@@ -647,19 +660,18 @@
         data.forEach(item=>{
           const revenue = item.harvestTons*1000*item.pricePerKg;
           const feedCost = item.harvestTons*1000*item.fcr*item.feedCostPerKg;
-          const net = revenue - feedCost; const roi = net/feedCost*100;
+          const roi = (revenue - feedCost)/feedCost*100;
 
           const d=document.createElement("div"); d.className="card pad lift reveal";
           d.innerHTML = `
             <img class="thumb" src="${item.images[0]}" alt="Ao nuôi - ${item.name}">
             <div class="k-m"><b>${item.name}</b> <span class="pill">${item.species}</span></div>
-            <div class="k-m hint">Diện tích: <b>${item.areaHa} ha</b> • Chu kỳ: <b>${item.cycleDays} ngày</b> • Sản lượng: <b>${item.harvestTons} tấn</b> • FCR: <b>${item.fcr}</b></div>
-            <div class="row col-3 k-m">
+            <div class="k-m hint">Sản lượng: <b>${item.harvestTons} tấn</b> • FCR: <b>${item.fcr}</b> • Chu kỳ: <b>${item.cycleDays} ngày</b></div>
+            <div class="row col-2 k-m">
               <div class="card pad"><small class="hint">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
-              <div class="card pad"><small class="hint">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
-              <div class="card pad"><small class="hint">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
+              <div class="card pad"><small class="hint">ROI (thức ăn)</small><div><b style="color:var(--kb-green)">${roi.toFixed(1)}%</b></div></div>
             </div>
-            <div class="k-m"><button class="btn primary" data-open="${item.id}">Xem chi tiết</button></div>
+            <div class="k-m"><button class="btn primary" data-open="${item.id}">Xem Phân tích Chi tiết</button></div>
           `;
           wrap.appendChild(d);
         });
@@ -677,28 +689,43 @@
       $("#mdSub").textContent = `${item.species} • ${item.started} → ${item.finished}`;
       const revenue = item.harvestTons*1000*item.pricePerKg;
       const feedCost = item.harvestTons*1000*item.fcr*item.feedCostPerKg;
-      const net = revenue - feedCost; const roi = net/feedCost*100;
+      const net = revenue - feedCost;
+      const roi = net/feedCost*100;
+      const profitPerHa = net / item.areaHa;
+
+      const maxVal = revenue;
+      const revenuePercent = 100;
+      const costPercent = (feedCost / maxVal) * 100;
+
       $("#mdBody").innerHTML = `
         <div class="md-grid">
           <div>
             <iframe title="Video - ${item.name}" class="thumb" style="border-radius:0"
               src="${item.video}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            <div class="pad"><b>Nhận xét của chủ trang trại:</b><div class="hint k-m">“${item.ownerNote}”</div></div>
           </div>
           <div class="pad">
-            <div class="hint">${item.ownerNote}</div>
-            <div class="row col-2 k-m">
-              <div class="card pad"><small class="hint">Doanh thu</small><div><b>${fmtVND(revenue)}</b></div></div>
-              <div class="card pad"><small class="hint">Chi phí thức ăn</small><div><b>${fmtVND(feedCost)}</b></div></div>
-              <div class="card pad"><small class="hint">Lợi nhuận (ước)</small><div><b>${fmtVND(net)}</b></div></div>
-              <div class="card pad"><small class="hint">ROI</small><div><b>${roi.toFixed(1)}%</b></div></div>
+            <b>Phân tích hiệu quả (dựa trên chi phí thức ăn)</b>
+            <div class="chart-wrapper">
+              <div class="chart-container">
+                <div class="chart-bar revenue" style="height:${revenuePercent}%"><span class="label">${fmtVND(revenue)}</span></div>
+                <div class="chart-bar cost" style="height:${costPercent}%"><span class="label">${fmtVND(feedCost)}</span></div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-dot" style="background:var(--kb-green)"></span>Doanh thu</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--kb-gold)"></span>Chi phí thức ăn</div>
+              </div>
             </div>
             <div class="k-m">
-              <b>Ghi chú kỹ thuật</b>
-              <ul class="k-m hint" style="line-height:1.9">
-                <li>Quản trị oxy hòa tan > 5 mg/L, cho ăn theo đường cong tăng trưởng.</li>
-                <li>Tối ưu FCR theo cỡ cá, bổ sung enzymes & probiotics khi chuyển cỡ.</li>
-                <li>Theo dõi NH₃/NH₄⁺, NO₂⁻; độ kiềm 80–120 mg/L.</li>
-              </ul>
+              <b>Chỉ số hiệu suất chính (KPIs)</b>
+              <table class="kpi-table">
+                <tr><td>Tổng doanh thu</td><td>${fmtVND(revenue)}</td></tr>
+                <tr><td>Chi phí thức ăn</td><td>${fmtVND(feedCost)}</td></tr>
+                <tr><td>Lợi nhuận gộp (ước tính)</td><td>${fmtVND(net)}</td></tr>
+                <tr><td><b>ROI (trên chi phí thức ăn)</b></td><td><b>${roi.toFixed(1)}%</b></td></tr>
+                <tr><td>Lợi nhuận / hecta</td><td>${fmtVND(profitPerHa)}</td></tr>
+                <tr><td>Tỷ lệ sống</td><td>${item.survivalRate*100}%</td></tr>
+              </table>
             </div>
           </div>
         </div>
@@ -710,7 +737,8 @@
     document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ $("#modal").classList.remove("active"); $("#modal").hidden=true; }});
 
     function renderPDF(){
-      const species = ["Tất cả", ...new Set(PDF_LIBRARY.map(x=>x.species))];
+      const allSpecies = [...new Set(PDF_LIBRARY.map(x=>x.species))];
+      const species = ["Tất cả", ...allSpecies.filter(s=>s!=="Tất cả")];
       const stages  = ["Tất cả", ...new Set(PDF_LIBRARY.map(x=>x.stage))];
       const goals   = ["Tất cả", ...new Set(PDF_LIBRARY.map(x=>x.goal))];
       const sp=$("#pdfSpecies"), st=$("#pdfStage"), go=$("#pdfGoal");
@@ -723,7 +751,7 @@
       function draw(){
         const f1=sp.value||"Tất cả", f2=st.value||"Tất cả", f3=go.value||"Tất cả";
         const data = PDF_LIBRARY.filter(x=>
-          (f1==="Tất cả"||x.species===f1) && (f2==="Tất cả"||x.stage===f2) && (f3==="Tất cả"||x.goal===f3)
+          (f1==="Tất cả"||x.species===f1||x.species==="Tất cả") && (f2==="Tất cả"||x.stage===f2) && (f3==="Tất cả"||x.goal===f3)
         );
         const wrap=$("#pdfList"); wrap.innerHTML="";
         data.forEach(x=>{
@@ -750,41 +778,48 @@
     }
 
     function renderDealer(){
-      const box=$("#dealerBox"); box.innerHTML="";
-      const state = { logged:false };
+      const box=$("#dealerBox");
+      const state = { logged:false, email: "" };
       draw();
       function draw(){
         box.innerHTML="";
         if(!state.logged){
-          const f=document.createElement("form"); f.className="card pad lift reveal"; f.innerHTML = `
-            <b>Đăng nhập</b>
-            <label class="k-m"><span>Email</span><input type="email" id="dlEmail" required placeholder="you@company.com" /></label>
-            <label class="k-m"><span>Mã truy cập</span><input type="password" id="dlCode" required placeholder="KINGBULL2025" /></label>
+          const f=document.createElement("form"); f.className="card pad lift"; f.innerHTML = `
+            <b>Đăng nhập Cổng thông tin</b>
+            <label class="k-m"><span>Email</span><input type="email" id="dlEmail" required placeholder="dai_ly@email.com" /></label>
+            <label class="k-m"><span>Mã truy cập</span><input type="password" id="dlCode" required value="KINGBULL2025" /></label>
             <div id="dlMsg" class="hint k-m" role="status"></div>
             <div class="k-m"><button class="btn primary" type="submit">Đăng nhập</button></div>`;
           f.addEventListener("submit",e=>{
             e.preventDefault();
-            const ok = $("#dlCode").value.trim().toUpperCase()==="KINGBULL2025" && $("#dlEmail").value.includes("@");
-            if(ok){ state.logged=true; draw(); } else { $("#dlMsg").textContent="Mã truy cập hoặc email không hợp lệ."; }
+            const email = $("#dlEmail").value;
+            const ok = $("#dlCode").value.trim().toUpperCase()==="KINGBULL2025" && email.includes("@");
+            if(ok){ state.logged=true; state.email = email; draw(); } else { $("#dlMsg").textContent="Mã truy cập hoặc email không hợp lệ."; }
           });
           box.appendChild(f);
         } else {
-          const g=document.createElement("div"); g.className="row col-2";
+          const g=document.createElement("div"); g.className="lift";
           g.innerHTML = `
-            <div class="card pad lift reveal">
-              <b>Tài liệu nội bộ</b>
-              <ul class="k-m hint" style="line-height:1.9">
-                <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Bảng giá số lượng lớn (PDF)</a></li>
-                <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Chính sách chiết khấu (PDF)</a></li>
-                <li><a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank">Tài liệu huấn luyện kỹ thuật (PDF)</a></li>
-              </ul>
+            <div style="margin-bottom:16px">
+              <b>Chào mừng, ${state.email}!</b>
+              <div class="hint">Đây là khu vực tài liệu và video huấn luyện nội bộ.</div>
             </div>
-            <div class="card pad lift reveal">
-              <b>Video Training</b>
-              <ul class="k-m hint" style="line-height:1.9">
-                <li><a href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank">Phối trộn & kiểm soát chất lượng</a></li>
-                <li><a href="https://www.youtube.com/watch?v=oUFJJNQGwhk" target="_blank">Vận hành kho lạnh & an toàn</a></li>
-              </ul>
+            <div class="row col-2">
+              <div class="card pad">
+                <b>Tài liệu kinh doanh</b>
+                <ul class="k-m hint" style="line-height:1.9; list-style:none; padding:0; display:grid; gap:8px">
+                  <li><a class="btn ghost" style="width:100%; justify-content:flex-start" href="#" target="_blank">Bảng giá số lượng lớn (PDF)</a></li>
+                  <li><a class="btn ghost" style="width:100%; justify-content:flex-start" href="#" target="_blank">Chính sách chiết khấu (PDF)</a></li>
+                  <li><a class="btn ghost" style="width:100%; justify-content:flex-start" href="#" target="_blank">Tài liệu huấn luyện kỹ thuật (PDF)</a></li>
+                </ul>
+              </div>
+              <div class="card pad">
+                <b>Video Training</b>
+                <ul class="k-m hint" style="line-height:1.9; list-style:none; padding:0; display:grid; gap:8px">
+                  <li><a class="btn ghost" style="width:100%; justify-content:flex-start" href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank">Phối trộn & kiểm soát chất lượng</a></li>
+                  <li><a class="btn ghost" style="width:100%; justify-content:flex-start" href="https://www.youtube.com/watch?v=oUFJJNQGwhk" target="_blank">Vận hành kho lạnh & an toàn</a></li>
+                </ul>
+              </div>
             </div>`;
           box.appendChild(g);
         }
@@ -795,7 +830,7 @@
     let mapInstance=null, layerGroup=null;
     function initMapOnce(){
       if(mapInstance) return;
-      mapInstance = L.map('leafletMap').setView([10.5,106],6);
+      mapInstance = L.map('leafletMap').setView([14.0583,108.2772], 5.5); // View of Vietnam
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(mapInstance);
       layerGroup = L.layerGroup().addTo(mapInstance);
       drawMap();
@@ -808,14 +843,15 @@
         const mk = L.marker([w.lat,w.lng]).addTo(layerGroup); mk.bindPopup(`<b>${w.name}</b><br/>Khu vực: ${w.region}`);
       });
       DESTINATIONS.filter(d => region==="Tất cả" || d.region===region).forEach(d=>{
-        const mk = L.circleMarker([d.lat,d.lng],{radius:8,color:"#0EA4E8"}).addTo(layerGroup); mk.bindPopup(`<b>${d.name}</b><br/>Khu vực: ${d.region}`);
+        const mk = L.circleMarker([d.lat,d.lng],{radius:8,color:"var(--kb-blue)",fillColor:"var(--kb-blue)",fillOpacity:0.7}).addTo(layerGroup); mk.bindPopup(`<b>${d.name}</b><br/>Khu vực: ${d.region}`);
       });
     }
 
     /* Support */
     $("#supportForm").addEventListener("submit", e=>{
       e.preventDefault();
-      $("#supportMsg").textContent = "Đã nhận yêu cầu! Kỹ thuật viên khu vực sẽ liên hệ sớm.";
+      $("#supportMsg").textContent = `Cảm ơn ${$("#spName").value}! Đã nhận yêu cầu, kỹ thuật viên sẽ liên hệ bạn sớm.`;
+      $("#supportForm").reset();
     });
 
     /* Logistics */
@@ -829,17 +865,16 @@
         WAREHOUSES.forEach(w=>{ const d=distanceKm({lat:w.lat,lng:w.lng},{lat:dest.lat,lng:dest.lng}); if(d<bestD){bestD=d; best=w;} });
         const capacityPerContainerTon = 25;
         const trips = ceil(qty / capacityPerContainerTon);
-        const hours = bestD/45 + 2;
+        const hours = bestD/45 + 2; // Avg speed 45km/h + 2h loading/unloading
         const etaDays = Math.max(1, Math.round(hours/8));
         const R=$("#logiResult"); R.style.display="grid"; R.innerHTML="";
         [
           {label:"Kho xuất phát", value:best.name},
-          {label:"Khu vực kho", value:best.region},
           {label:"Khoảng cách (km)", value:Math.round(bestD)},
-          {label:"Số chuyến (ước)", value:trips},
+          {label:"Số chuyến (cont 25T)", value:trips},
           {label:"Thời gian giao (ngày)", value:etaDays},
         ].forEach(s=>{
-          const c=document.createElement("div"); c.className="card pad lift reveal";
+          const c=document.createElement("div"); c.className="card pad lift";
           c.innerHTML=`<small class="hint">${s.label}</small><div><b>${s.value}</b></div>`;
           R.appendChild(c);
         });
@@ -869,7 +904,8 @@
     /* R&D */
     $("#rdForm").addEventListener("submit", e=>{
       e.preventDefault();
-      $("#rdMsg").textContent = "Đã nhận thông tin! Chúng tôi sẽ phản hồi qua email.";
+      $("#rdMsg").textContent = "Đã nhận thông tin! Chúng tôi sẽ phản hồi qua email trong vòng 3-5 ngày làm việc.";
+      $("#rdForm").reset();
     });
 
     /* Boot */
@@ -885,17 +921,13 @@
       renderLogistics();
       renderNews();
 
-      // Load map lazily when approaching supply section
       const mapSection = $("#supply");
       const io = new IntersectionObserver((entries)=>{
         if(entries.some(e=>e.isIntersecting)){ initMapOnce(); io.disconnect(); }
-      }, {rootMargin:"0px 0px -30% 0px"});
+      }, {rootMargin:"0px 0px 100px 0px"});
       io.observe(mapSection);
 
-      // Footer year
       $("#year").textContent = new Date().getFullYear();
-
-      // Anchor fix for mobile select (if loaded with hash)
       if(location.hash){ const el = $(location.hash); if(el) el.scrollIntoView(); }
     }
     document.addEventListener("DOMContentLoaded", init);
