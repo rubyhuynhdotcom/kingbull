@@ -1,585 +1,953 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KINGBULL Việt Nam — Aquafeed B2B Web-App</title>
+  <meta name="description" content="Interactive web-app giới thiệu & tư vấn chuyên sâu cho KINGBULL Việt Nam (Aquafeed B2B)" />
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
 
-// Import icons từ react-icons
-import { FiHome, FiBriefcase, FiBookOpen, FiVideo, FiUsers, FiMap, FiPhoneCall, FiTool, FiRss, FiGitBranch, FiChevronDown, FiX, FiDownload, FiArrowRight, FiCheckCircle, FiLogIn, FiLogOut, FiLock, FiPhone, FiMail } from 'react-icons/fi';
-import { FaZalo } from 'react-icons/fa';
+  <!-- Tailwind config BEFORE CDN -->
+  <script>
+    window.tailwind = window.tailwind || {};
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kb: {
+              blue: "#0EA4E8",
+              green: "#2BCB53",
+              gold: "#FFBE00",
+              dark: "#0F172A"
+            }
+          },
+          boxShadow: {
+            soft: "0 8px 30px rgba(0,0,0,0.06)"
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-// Fix lỗi icon mặc định của Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 
+  <style>
+    :root{
+      --kb-blue:#0EA4E8;
+      --kb-green:#2BCB53;
+      --kb-gold:#FFBE00;
+    }
+    .brand-gradient {
+      background: radial-gradient(1200px 400px at 20% -10%, rgba(14,164,232,.18), transparent 50%),
+                  radial-gradient(800px 300px at 90% 10%, rgba(43,203,83,.14), transparent 60%),
+                  linear-gradient(180deg, #ffffff, #f8fafc 60%, #f1f5f9);
+    }
+    .kb-focus:focus-visible{
+      outline: 3px solid var(--kb-blue);
+      outline-offset: 2px;
+      border-radius: .5rem;
+    }
+    /* Fix Leaflet container size in our section */
+    #kb-map { min-height: 420px; border-radius: 1rem; }
+  </style>
+</head>
+<body class="bg-white text-slate-900 antialiased">
+  <a href="#main" class="sr-only focus:not-sr-only kb-focus absolute top-2 left-2 bg-white px-3 py-1 rounded shadow">
+    Bỏ qua đến nội dung chính
+  </a>
 
-// DUMMY DATA (Dữ liệu mẫu)
-//================================================================
-const caseStudiesData = [
-  { id: 1, image: 'https://via.placeholder.com/400x300.png/0EA4E8/FFFFFF?text=Ao+Nuôi+Cá+Tra', species: 'Cá Tra', area: '5,000 m²', duration: '8 tháng', output: '250 tấn', feedCost: '3.5 tỷ VNĐ', profit: '800 triệu VNĐ', roi: '22.8%', farmerQuote: 'Thức ăn Kingbull giúp cá lớn nhanh, FCR thấp, chất lượng thịt xuất khẩu rất tốt. Đội ngũ kỹ thuật hỗ trợ tận tình.', details: { video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' } },
-  { id: 2, image: 'https://via.placeholder.com/400x300.png/2BCB53/FFFFFF?text=Trại+Tôm+Thẻ', species: 'Tôm Thẻ Chân Trắng', area: '10,000 m²', duration: '4 tháng', output: '15 tấn', feedCost: '1.2 tỷ VNĐ', profit: '550 triệu VNĐ', roi: '45.8%', farmerQuote: 'Nhờ quy trình của Kingbull, vụ tôm vừa rồi thành công vượt mong đợi, không bị dịch bệnh, tôm đều size.', details: { video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' } },
-  { id: 3, image: 'https://via.placeholder.com/400x300.png/FFBE00/000000?text=Lồng+Bè+Cá+Diêu+Hồng', species: 'Cá Diêu Hồng', area: '2,000 m³', duration: '6 tháng', output: '50 tấn', feedCost: '900 triệu VNĐ', profit: '250 triệu VNĐ', roi: '27.7%', farmerQuote: 'Chất lượng nước ổn định, cá khỏe mạnh, màu sắc đẹp. Kingbull là đối tác tin cậy của chúng tôi.', details: { video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' } },
-];
+  <div id="root"></div>
 
-const pdfLibraryData = [
-  { id: 1, title: 'Tối ưu chỉ số FCR cho Cá Tra xuất khẩu', category: 'Cá Tra', topic: 'FCR', url: '#' },
-  { id: 2, title: 'Quy trình phòng bệnh tổng hợp cho Tôm Thẻ', category: 'Tôm Thẻ', topic: 'Bệnh học', url: '#' },
-  { id: 3, title: 'Quản lý môi trường nước ao nuôi công nghệ cao', category: 'Tổng hợp', topic: 'Môi trường', url: '#' },
-  { id: 4, title: 'Tối ưu vòng quay vốn trong nuôi trồng thủy sản', category: 'Tổng hợp', topic: 'Tài chính', url: '#' },
-];
+  <!-- React + ReactDOM + Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-const newsData = [
-    { id: 1, title: 'Giá cá tra nguyên liệu tăng nhẹ', tag: 'Thị trường', date: '12/08/2025', excerpt: 'Giá cá tra tại ĐBSCL đang có xu hướng nhích nhẹ do nhu cầu từ các nhà máy chế biến xuất khẩu tăng...' },
-    { id: 2, title: 'Xu hướng xuất khẩu thủy sản sang thị trường EU cuối năm 2025', tag: 'Xuất khẩu', date: '10/08/2025', excerpt: 'Các chuyên gia dự báo thị trường EU sẽ tăng cường nhập khẩu các sản phẩm giá trị gia tăng từ Việt Nam...' },
-    { id: 3, title: 'Cảnh báo bệnh hoại tử gan tụy cấp trên tôm', tag: 'Dịch bệnh', date: '08/08/2025', excerpt: 'Bà con cần chú ý các biện pháp phòng ngừa và xử lý kịp thời khi phát hiện dấu hiệu bệnh...' },
-];
+  <!-- Framer Motion UMD -->
+  <script src="https://unpkg.com/framer-motion@11.0.8/dist/framer-motion.umd.js"></script>
 
-const mapLocations = [
-    { id: 1, position: [10.045162, 105.746857], name: 'Nhà máy chính Kingbull Cần Thơ', info: 'Năng lực sản xuất: 500,000 tấn/năm' },
-    { id: 2, position: [10.7769, 106.7009], name: 'Kho trung chuyển TP.HCM', info: 'Thời gian giao hàng: 24h' },
-    { id: 3, position: [9.5638, 105.7412], name: 'Kho khu vực Cà Mau', info: 'Thời gian giao hàng: 12h' },
-];
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
+  <!-- APP -->
+  <script type="text/babel">
+    const { useState, useMemo, useEffect, useRef } = React;
+    const { motion, AnimatePresence } = window.framerMotion;
 
-// COMPONENTS
-//================================================================
-
-const SectionWrapper = ({ children, id }) => (
-    <motion.section 
-        id={id}
-        className="py-16 md:py-24 px-4 md:px-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-    >
-        {children}
-    </motion.section>
-);
-
-const Navbar = ({ activeTab, setActiveTab, navItems }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-md">
-            <div className="container mx-auto px-4 md:px-8">
-                <div className="flex items-center justify-between h-20">
-                    <div className="font-display text-3xl font-bold text-kingbull-blue cursor-pointer" onClick={() => setActiveTab('home')}>
-                        KINGBULL
-                    </div>
-                    <nav className="hidden lg:flex items-center space-x-2">
-                        {navItems.map(item => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id)}
-                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeTab === item.id ? 'bg-kingbull-blue text-white shadow-sm' : 'text-dark-text hover:bg-kingbull-blue/10'}`}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </nav>
-                    <div className="lg:hidden">
-                        <button onClick={() => setIsOpen(!isOpen)} className="text-dark-text focus:outline-none">
-                            {isOpen ? <FiX size={24} /> : <FiChevronDown size={24} />}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {/* Mobile Menu */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="lg:hidden bg-white"
-                    >
-                        <nav className="flex flex-col px-4 pt-2 pb-4 space-y-1">
-                            {navItems.map(item => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => {
-                                        setActiveTab(item.id);
-                                        setIsOpen(false);
-                                    }}
-                                    className={`block px-3 py-2 rounded-md text-base font-medium text-left ${activeTab === item.id ? 'bg-kingbull-blue text-white' : 'text-dark-text hover:bg-kingbull-blue/10'}`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </nav>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </header>
+    /** --------------------------
+     * Brand & common components
+     * -------------------------- */
+    const Container = ({children, id}) => (
+      <section id={id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">{children}</section>
     );
-};
 
-const Hero = ({ setActiveTab }) => (
-    <section id="home" className="relative flex items-center justify-center h-[calc(100vh-80px)] text-white bg-gray-700">
-        <div className="absolute inset-0 bg-black opacity-50"></div>
-        {/* Placeholder cho video nền */}
-        <video autoPlay loop muted className="absolute z-0 w-auto min-w-full min-h-full max-w-none">
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-flying-over-a-large-fish-farm-42217-large.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-        </video>
-        <div className="relative z-10 text-center px-4">
-            <h1 className="text-5xl md:text-7xl font-bold font-display text-kingbull-blue tracking-tight">KINGBULL</h1>
-            <p className="mt-4 text-xl md:text-2xl font-light text-white drop-shadow-md">"Đột phá tăng trưởng, dẫn đầu lợi nhuận"</p>
-            <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-4">
-                <button onClick={() => setActiveTab('case-study')} className="bg-kingbull-blue hover:bg-kingbull-blue-dark text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg">
-                    Xem Hồ sơ Dự án
-                </button>
-                <button onClick={() => setActiveTab('support')} className="bg-kingbull-gold hover:bg-kingbull-gold-dark text-dark-text font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg">
-                    Liên hệ Hợp tác
-                </button>
-            </div>
-             <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                    <FiCheckCircle className="text-kingbull-green text-3xl"/>
-                    <p className="text-left">Năng lực cung ứng quy mô lớn, ổn định.</p>
-                </div>
-                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                    <FiCheckCircle className="text-kingbull-green text-3xl"/>
-                    <p className="text-left">Công thức tối ưu lợi nhuận, giảm FCR.</p>
-                </div>
-                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                    <FiCheckCircle className="text-kingbull-green text-3xl"/>
-                    <p className="text-left">Hỗ trợ kỹ thuật chuyên sâu 24/7.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-);
-
-
-const CaseStudyCard = ({ caseItem, onSelect }) => (
-    <motion.div 
-        className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer group"
-        onClick={() => onSelect(caseItem)}
-        whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
-    >
-        <div className="relative">
-            <img src={caseItem.image} alt={caseItem.species} className="w-full h-48 object-cover"/>
-            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors"></div>
-            <span className="absolute top-2 right-2 bg-kingbull-gold text-dark-text text-xs font-bold px-2 py-1 rounded">{caseItem.species}</span>
-        </div>
-        <div className="p-4">
-            <h3 className="font-bold text-lg text-dark-text">Lợi nhuận: {caseItem.profit}</h3>
-            <p className="text-sm text-gray-600">Sản lượng: {caseItem.output}</p>
-            <p className="text-sm text-gray-600">Thời gian nuôi: {caseItem.duration}</p>
-            <div className="text-right mt-2 text-kingbull-blue font-semibold group-hover:underline">Xem chi tiết <FiArrowRight className="inline"/></div>
-        </div>
-    </motion.div>
-);
-
-const CaseStudyDetail = ({ caseItem, onBack }) => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-light-bg p-4 md:p-8 rounded-lg">
-        <button onClick={onBack} className="mb-6 flex items-center text-kingbull-blue hover:underline font-semibold">
-            <FiArrowRight className="transform rotate-180 mr-2"/> Quay lại danh sách
-        </button>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3">
-                <h2 className="text-3xl font-bold font-display text-dark-text mb-2">Dự án nuôi {caseItem.species}</h2>
-                <div className="aspect-w-16 aspect-h-9 mb-4 rounded-lg overflow-hidden">
-                    <iframe src={caseItem.details.video} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe>
-                </div>
-                <blockquote className="border-l-4 border-kingbull-gold italic p-4 bg-white my-4">
-                    <p>"{caseItem.farmerQuote}"</p>
-                    <cite className="block text-right mt-2 not-italic font-semibold">- Chủ trại</cite>
-                </blockquote>
-            </div>
-            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="text-xl font-bold text-kingbull-blue mb-4 border-b pb-2">Dữ liệu & Hiệu quả</h3>
-                <div className="space-y-3 text-dark-text">
-                    <p><strong>Loài nuôi:</strong> {caseItem.species}</p>
-                    <p><strong>Diện tích:</strong> {caseItem.area}</p>
-                    <p><strong>Thời gian nuôi:</strong> {caseItem.duration}</p>
-                    <p><strong>Sản lượng:</strong> <span className="font-bold text-kingbull-green">{caseItem.output}</span></p>
-                    <p><strong>Chi phí thức ăn:</strong> {caseItem.feedCost}</p>
-                    <p><strong>Lợi nhuận:</strong> <span className="font-bold text-kingbull-green">{caseItem.profit}</span></p>
-                    <div className="text-center bg-kingbull-gold/20 p-4 rounded-lg mt-4">
-                        <p className="text-lg font-bold">Tỷ suất Hoàn vốn (ROI)</p>
-                        <p className="text-4xl font-bold text-kingbull-gold">{caseItem.roi}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </motion.div>
-);
-
-const CaseStudy = () => {
-    const [selectedCase, setSelectedCase] = useState(null);
-
-    return (
-        <SectionWrapper id="case-study">
-            <div className="container mx-auto">
-                 <AnimatePresence mode="wait">
-                    {selectedCase ? (
-                        <CaseStudyDetail key="detail" caseItem={selectedCase} onBack={() => setSelectedCase(null)} />
-                    ) : (
-                        <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                            <h2 className="text-3xl md:text-4xl font-bold text-center text-dark-text font-display mb-12">Hồ Sơ Dự Án Thành Công</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {caseStudiesData.map(c => <CaseStudyCard key={c.id} caseItem={c} onSelect={setSelectedCase} />)}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </SectionWrapper>
+    const SectionTitle = ({title, subtitle}) => (
+      <div className="mb-8">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <span className="text-kb-blue">|</span> {title}
+        </h2>
+        {subtitle && <p className="text-slate-600 mt-2">{subtitle}</p>}
+      </div>
     );
-};
 
-const PDFLibrary = () => (
-    <SectionWrapper id="library" >
-        <div className="container mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-text font-display mb-12">Thư Viện Kỹ Thuật Chuyên Sâu</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {pdfLibraryData.map(pdf => (
-                    <a key={pdf.id} href={pdf.url} download className="block bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <FiDownload className="text-kingbull-blue text-4xl mx-auto mb-4"/>
-                        <h3 className="font-semibold text-dark-text mb-2">{pdf.title}</h3>
-                        <div className="flex justify-center gap-2">
-                           <span className="text-xs bg-kingbull-blue/20 text-kingbull-blue font-medium px-2 py-1 rounded-full">{pdf.category}</span>
-                           <span className="text-xs bg-kingbull-green/20 text-kingbull-green font-medium px-2 py-1 rounded-full">{pdf.topic}</span>
-                        </div>
-                    </a>
-                ))}
-            </div>
-        </div>
-    </SectionWrapper>
-);
+    const Pill = ({children}) => (
+      <span className="inline-block text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">{children}</span>
+    );
 
-const FactoryVideo = () => (
-    <SectionWrapper id="factory" className="bg-light-bg">
-        <div className="container mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-text font-display mb-12">Quy Trình Sản Xuất & Năng Lực Nhà Máy</h2>
-            <div className="aspect-w-16 aspect-h-9 mb-8 rounded-lg overflow-hidden shadow-2xl">
-                 <iframe src="https://www.youtube.com/embed/SjgjRIwBtoA" title="Factory Video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe>
-            </div>
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <img src="https://via.placeholder.com/400x300.png?text=Dây+chuyền+1" alt="Production Line 1" className="rounded-lg shadow-md w-full h-full object-cover" />
-                <img src="https://via.placeholder.com/400x300.png?text=Kho+lạnh" alt="Cold Storage" className="rounded-lg shadow-md w-full h-full object-cover" />
-                <img src="https://via.placeholder.com/400x300.png?text=Container+xuất+hàng" alt="Export Container" className="rounded-lg shadow-md w-full h-full object-cover" />
-                <img src="https://via.placeholder.com/400x300.png?text=Phòng+Lab" alt="Lab" className="rounded-lg shadow-md w-full h-full object-cover" />
-            </div>
-        </div>
-    </SectionWrapper>
-);
+    const Stat = ({label, value}) => (
+      <div className="p-4 rounded-xl bg-white shadow-soft border border-slate-100">
+        <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+        <div className="text-xl font-bold mt-1">{value}</div>
+      </div>
+    );
 
-const DealerPortal = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    const handleLogin = (e) => {
-        e.preventDefault();
-        // Mock login: chỉ cần set state là true
-        setIsLoggedIn(true);
+    /** --------------------------
+     * Data (dummy)
+     * -------------------------- */
+    const COMPANY = {
+      name: "CÔNG TY TNHH KINGBULL VIỆT NAM",
+      tax: "1801608521",
+      address: "Tầng 6, số 41, Cách Mạng Tháng Tám, Phường Cái Khế, TP Cần Thơ, Việt Nam",
+      email: "admin@kingbull.com.vn",
+      phone: "0587085649",
+      slogan: "Đột phá tăng trưởng, dẫn đầu lợi nhuận",
+      hotlineLink: "tel:+84587085649",
+      zaloLink: "https://zalo.me/0587085649"
     };
 
-    return (
-        <SectionWrapper id="dealer">
-            <div className="container mx-auto max-w-4xl text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-dark-text font-display mb-4">Khu Vực Dành Cho Đại Lý & Trang Trại</h2>
-                
-                <AnimatePresence mode="wait">
-                    {!isLoggedIn ? (
-                        <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-8 bg-white p-8 rounded-xl shadow-lg border">
-                            <FiLock className="text-kingbull-gold text-5xl mx-auto mb-4"/>
-                            <p className="text-gray-600 mb-6">Vui lòng đăng nhập để truy cập tài liệu nội bộ.</p>
-                            <form onSubmit={handleLogin} className="max-w-sm mx-auto">
-                                <input type="email" placeholder="Email đăng nhập" className="w-full px-4 py-2 border rounded-md mb-4 focus:ring-kingbull-blue focus:border-kingbull-blue" defaultValue="daily@kingbull.com.vn" />
-                                <input type="password" placeholder="Mật khẩu" className="w-full px-4 py-2 border rounded-md mb-6 focus:ring-kingbull-blue focus:border-kingbull-blue" defaultValue="password" />
-                                <button type="submit" className="w-full bg-kingbull-blue hover:bg-kingbull-blue-dark text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center gap-2">
-                                    <FiLogIn /> Đăng Nhập
-                                </button>
-                            </form>
-                        </motion.div>
-                    ) : (
-                        <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-8 bg-white p-8 rounded-xl shadow-lg border">
-                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-2xl font-bold text-kingbull-green">Chào mừng Đại lý!</h3>
-                                <button onClick={() => setIsLoggedIn(false)} className="text-sm text-red-500 hover:underline flex items-center gap-1">
-                                    <FiLogOut /> Đăng xuất
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                                <a href="#" download className="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-                                    <h4 className="font-bold text-blue-800">Bảng giá số lượng lớn</h4>
-                                    <p className="text-sm text-blue-600">Cập nhật tháng 08/2025</p>
-                                </a>
-                                <a href="#" download className="block p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-                                    <h4 className="font-bold text-green-800">Chính sách chiết khấu</h4>
-                                    <p className="text-sm text-green-600">Áp dụng từ Q3/2025</p>
-                                </a>
-                                <a href="#" download className="block p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors">
-                                    <h4 className="font-bold text-yellow-800">Tài liệu huấn luyện kỹ thuật</h4>
-                                    <p className="text-sm text-yellow-600">Video & PDF</p>
-                                </a>
-                                <a href="#" download className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <h4 className="font-bold text-gray-800">Mẫu Hợp đồng phân phối</h4>
-                                    <p className="text-sm text-gray-600">Bản template</p>
-                                </a>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </SectionWrapper>
-    );
-};
-
-
-const SupplyMap = () => (
-    <SectionWrapper id="map">
-        <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-dark-text font-display mb-12">Bản Đồ Năng Lực Cung Ứng</h2>
-            <div className="h-[500px] w-full rounded-lg shadow-xl overflow-hidden">
-                <MapContainer center={[10.045, 105.746]} zoom={8} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {mapLocations.map(loc => (
-                         <Marker key={loc.id} position={loc.position}>
-                            <Popup>
-                                <strong className="text-kingbull-blue">{loc.name}</strong><br/>{loc.info}
-                            </Popup>
-                        </Marker>
-                    ))}
-                </MapContainer>
-            </div>
-        </div>
-    </SectionWrapper>
-);
-
-const Support = () => (
-    <SectionWrapper id="support" className="bg-light-bg">
-        <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-dark-text font-display mb-12">Hỗ Trợ Kỹ Thuật 24/7</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <a href="tel:0587085649" className="text-center bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                    <FiPhoneCall className="text-kingbull-green text-6xl mx-auto mb-4"/>
-                    <h3 className="text-xl font-bold text-dark-text">Gọi Hotline Kỹ Thuật</h3>
-                    <p className="text-2xl font-semibold text-kingbull-green mt-2">058.708.5649</p>
-                    <p className="text-sm text-gray-500 mt-1">Sẵn sàng hỗ trợ 24/7</p>
-                </a>
-                 <a href="https://zalo.me/your-zalo-oa" target="_blank" rel="noopener noreferrer" className="text-center bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                    <FaZalo className="text-blue-500 text-6xl mx-auto mb-4"/>
-                    <h3 className="text-xl font-bold text-dark-text">Chat Zalo OA</h3>
-                    <p className="text-kingbull-blue mt-2 font-semibold">Kingbull Việt Nam OA</p>
-                    <p className="text-sm text-gray-500 mt-1">Phản hồi trong vài phút</p>
-                </a>
-                <div className="text-center bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                    <FiMail className="text-kingbull-gold text-6xl mx-auto mb-4"/>
-                    <h3 className="text-xl font-bold text-dark-text">Đặt Lịch Hẹn Chuyên Gia</h3>
-                    <p className="text-gray-600 mt-2">Điền form để chúng tôi liên hệ và sắp xếp chuyên gia phù hợp.</p>
-                     <button className="mt-4 bg-kingbull-gold text-dark-text font-bold py-2 px-4 rounded-lg">
-                        Điền Form
-                    </button>
-                </div>
-            </div>
-        </div>
-    </SectionWrapper>
-);
-
-const LogisticsCalc = () => {
-    const [result, setResult] = useState('');
-
-    const handleCalculate = (e) => {
-        e.preventDefault();
-        const quantity = e.target.elements.quantity.value;
-        const location = e.target.elements.location.value;
-
-        if(!quantity || !location) {
-            setResult('<p class="text-red-500">Vui lòng nhập đầy đủ thông tin.</p>');
-            return;
-        }
-
-        // Mock calculation
-        const containers = Math.ceil(quantity / 20);
-        const time = location === 'can-tho' ? '1 ngày' : (location === 'hcm' ? '2 ngày' : '3 ngày');
-        const warehouse = location === 'can-tho' ? 'Nhà máy chính Cần Thơ' : 'Kho trung chuyển TP.HCM';
-
-        setResult(`
-            <h4 class="font-bold text-lg text-kingbull-blue mb-2">Kết quả mô phỏng:</h4>
-            <p><strong>Số chuyến container (20 tấn/cont):</strong> ${containers} chuyến</p>
-            <p><strong>Thời gian giao hàng dự kiến:</strong> ${time}</p>
-            <p><strong>Kho xuất phát:</strong> ${warehouse}</p>
-        `);
-    }
-
-    return (
-        <SectionWrapper id="logistics">
-            <div className="container mx-auto">
-                <h2 className="text-3xl md:text-4xl font-bold text-center text-dark-text font-display mb-12">Công Cụ Tính Toán Logistics & Kho Bãi</h2>
-                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-8 rounded-xl shadow-lg border">
-                    <form onSubmit={handleCalculate}>
-                        <h3 className="text-xl font-bold text-dark-text mb-4">Thông tin đơn hàng</h3>
-                        <div className="mb-4">
-                            <label htmlFor="quantity" className="block text-gray-700 font-semibold mb-2">Số lượng sản phẩm cần (tấn)</label>
-                            <input type="number" id="quantity" name="quantity" className="w-full px-4 py-2 border rounded-md focus:ring-kingbull-blue focus:border-kingbull-blue" placeholder="VD: 50" />
-                        </div>
-                        <div className="mb-6">
-                            <label htmlFor="location" className="block text-gray-700 font-semibold mb-2">Địa điểm giao hàng</label>
-                            <select id="location" name="location" className="w-full px-4 py-2 border rounded-md focus:ring-kingbull-blue focus:border-kingbull-blue bg-white">
-                                <option value="can-tho">Tại Cần Thơ</option>
-                                <option value="hcm">TP. Hồ Chí Minh</option>
-                                <option value="ca-mau">Cà Mau</option>
-                                <option value="khac">Khu vực khác</option>
-                            </select>
-                        </div>
-                        <button type="submit" className="w-full bg-kingbull-green hover:bg-kingbull-green-dark text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center gap-2">
-                           <FiTool/> Tính toán mô phỏng
-                        </button>
-                    </form>
-                    <div className="bg-light-bg p-6 rounded-lg">
-                        {result ? (
-                             <div dangerouslySetInnerHTML={{ __html: result }}></div>
-                        ) : (
-                             <div className="text-center text-gray-500 flex flex-col items-center justify-center h-full">
-                                <FiArrowRight className="text-4xl mb-2"/>
-                                <p>Kết quả sẽ hiển thị ở đây.</p>
-                             </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </SectionWrapper>
-    )
-};
-
-
-const News = () => (
-    <SectionWrapper id="news" className="bg-light-bg">
-        <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-dark-text font-display mb-12">Tin Tức Ngành & Phân Tích Thị Trường</h2>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {newsData.map(item => (
-                    <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-                        <div className="p-6 flex-grow">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs bg-kingbull-gold text-dark-text font-bold px-2 py-1 rounded">{item.tag}</span>
-                                <span className="text-xs text-gray-500">{item.date}</span>
-                            </div>
-                            <h3 className="font-bold text-lg text-dark-text mb-2">{item.title}</h3>
-                            <p className="text-gray-600 text-sm">{item.excerpt}</p>
-                        </div>
-                        <div className="p-6 pt-0">
-                           <a href="#" className="font-semibold text-kingbull-blue hover:underline">Đọc thêm <FiArrowRight className="inline"/></a>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </SectionWrapper>
-);
-
-const RDSection = () => (
-    <SectionWrapper id="rd">
-         <div className="container mx-auto text-center max-w-4xl">
-            <FiGitBranch className="text-kingbull-blue text-6xl mx-auto mb-4"/>
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-text font-display mb-4">Chương Trình Hợp Tác R&D</h2>
-            <p className="text-lg text-gray-600 mb-8">
-                Kingbull luôn tiên phong trong nghiên cứu và phát triển, hợp tác chặt chẽ với các viện nghiên cứu, trường đại học và các trại nuôi thử nghiệm để tạo ra những sản phẩm đột phá, mang lại hiệu quả bền vững cho ngành thủy sản Việt Nam.
-            </p>
-            <button className="bg-kingbull-blue hover:bg-kingbull-blue-dark text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg">
-                Đăng ký Hợp tác Nghiên cứu
-            </button>
-        </div>
-    </SectionWrapper>
-);
-
-
-const Footer = () => (
-    <footer className="bg-dark-text text-white">
-        <div className="container mx-auto py-12 px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <h3 className="text-2xl font-bold font-display text-kingbull-blue">KINGBULL VIỆT NAM</h3>
-                    <p className="text-sm mt-2 text-gray-300">"Đột phá tăng trưởng, dẫn đầu lợi nhuận"</p>
-                </div>
-                 <div>
-                    <h4 className="font-bold text-lg mb-4">Thông tin liên hệ</h4>
-                    <p className="text-sm text-gray-400 mb-2"><strong>MST:</strong> 1801608521</p>
-                    <p className="text-sm text-gray-400 mb-2"><strong>Địa chỉ:</strong> Tầng 6, số 41, CMT8, P. Cái Khế, TP Cần Thơ</p>
-                    <p className="text-sm text-gray-400 mb-2"><strong>Email:</strong> admin@kingbull.com.vn</p>
-                    <p className="text-sm text-gray-400 mb-2"><strong>Hotline:</strong> 058.708.5649</p>
-                </div>
-                <div>
-                     <h4 className="font-bold text-lg mb-4">Liên kết nhanh</h4>
-                     <ul className="space-y-2 text-sm">
-                        <li><a href="#case-study" className="text-gray-400 hover:text-white">Dự án thành công</a></li>
-                        <li><a href="#library" className="text-gray-400 hover:text-white">Thư viện kỹ thuật</a></li>
-                        <li><a href="#dealer" className="text-gray-400 hover:text-white">Cổng thông tin đại lý</a></li>
-                        <li><a href="#support" className="text-gray-400 hover:text-white">Hỗ trợ 24/7</a></li>
-                     </ul>
-                </div>
-                 <div>
-                     <h4 className="font-bold text-lg mb-4">Kết nối với chúng tôi</h4>
-                     <div className="flex space-x-4">
-                        {/* Add social media links here */}
-                     </div>
-                </div>
-            </div>
-             <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-500">
-                <p>&copy; {new Date().getFullYear()} CÔNG TY TNHH KINGBULL VIỆT NAM. All Rights Reserved.</p>
-            </div>
-        </div>
-    </footer>
-);
-
-
-// MAIN APP COMPONENT
-//================================================================
-export default function App() {
-    const [activeTab, setActiveTab] = useState('home');
-
-    const navItems = [
-        { id: 'home', label: 'Trang chủ', icon: <FiHome/>, component: <Hero setActiveTab={setActiveTab} /> },
-        { id: 'case-study', label: 'Case Study', icon: <FiBriefcase/>, component: <CaseStudy /> },
-        { id: 'library', label: 'Thư viện', icon: <FiBookOpen/>, component: <PDFLibrary /> },
-        { id: 'factory', label: 'Nhà máy', icon: <FiVideo/>, component: <FactoryVideo /> },
-        { id: 'dealer', label: 'Đại lý', icon: <FiUsers/>, component: <DealerPortal /> },
-        { id: 'map', label: 'Cung ứng', icon: <FiMap/>, component: <SupplyMap /> },
-        { id: 'support', label: 'Hỗ trợ 24/7', icon: <FiPhoneCall/>, component: <Support /> },
-        { id: 'logistics', label: 'Logistics', icon: <FiTool/>, component: <LogisticsCalc /> },
-        { id: 'news', label: 'Tin tức', icon: <FiRss/>, component: <News /> },
-        { id: 'rd', label: 'Hợp tác R&D', icon: <FiGitBranch/>, component: <RDSection /> },
+    const TABS = [
+      { key: "home", label: "Home" },
+      { key: "cases", label: "Case Study" },
+      { key: "library", label: "Thư viện PDF" },
+      { key: "videos", label: "Video Nhà máy" },
+      { key: "dealer", label: "Dành cho Đại lý" },
+      { key: "map", label: "Bản đồ Năng lực" },
+      { key: "support", label: "Hỗ trợ 24/7" },
+      { key: "logistics", label: "Tính Logistics" },
+      { key: "news", label: "Tin tức & Phân tích" },
+      { key: "rd", label: "Hợp tác R&D" }
     ];
-    
-    // Scroll to section when tab changes
-    useEffect(() => {
-        const element = document.getElementById(activeTab);
-        if (element) {
-            // Add a slight offset to account for the sticky navbar height
-            const offset = 80; 
-            const bodyRect = document.body.getBoundingClientRect().top;
-            const elementRect = element.getBoundingClientRect().top;
-            const elementPosition = elementRect - bodyRect;
-            const offsetPosition = elementPosition - offset;
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-        }
-    }, [activeTab]);
+    const CASE_STUDIES = [
+      {
+        id: 1, name: "Ao nuôi cá tra A1 - Cần Thơ", species: "Cá tra",
+        areaHa: 5, cycleDays: 180, harvestTons: 600, fcr: 1.5,
+        feedCostPerKg: 12000, pricePerKg: 25000,
+        started: "2024-03-01", finished: "2024-08-30",
+        images: ["https://images.unsplash.com/photo-1593262109328-154f3fb9d29f?q=80&w=1200&auto=format&fit=crop"],
+        video: "https://www.youtube.com/embed/1La4QzGeaaQ",
+        ownerNote: "Thức ăn ổn định, tăng trưởng đồng đều, tỷ lệ sống cao.",
+      },
+      {
+        id: 2, name: "Mô hình cá rô phi siêu thâm canh - Long An", species: "Cá rô phi",
+        areaHa: 2.5, cycleDays: 150, harvestTons: 220, fcr: 1.35,
+        feedCostPerKg: 11500, pricePerKg: 32000,
+        started: "2024-02-15", finished: "2024-07-20",
+        images: ["https://images.unsplash.com/photo-1576765608610-5f4e01aa12c4?q=80&w=1200&auto=format&fit=crop"],
+        video: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+        ownerNote: "Tối ưu FCR, giảm hao hụt nhờ quản trị nước tốt.",
+      },
+      {
+        id: 3, name: "Cá lóc thương phẩm - An Giang", species: "Cá lóc",
+        areaHa: 1.2, cycleDays: 120, harvestTons: 95, fcr: 1.6,
+        feedCostPerKg: 12500, pricePerKg: 38000,
+        started: "2024-04-10", finished: "2024-08-10",
+        images: ["https://images.unsplash.com/photo-1517837016564-bfcf7a7c89d6?q=80&w=1200&auto=format&fit=crop"],
+        video: "https://www.youtube.com/embed/oUFJJNQGwhk",
+        ownerNote: "Tăng trưởng nhanh, màu thịt đẹp, đầu ra ổn định.",
+      }
+    ];
 
+    const PDF_LIBRARY = [
+      { id: "pdf1", title: "Tối ưu FCR theo giai đoạn", species: "Cá tra", stage: "Tăng trưởng", goal: "Tối ưu chi phí",
+        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "pdf2", title: "Phòng bệnh thường gặp mùa mưa", species: "Cá rô phi", stage: "Phòng bệnh", goal: "An toàn sinh học",
+        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "pdf3", title: "Quản lý môi trường nước ao đất", species: "Cá lóc", stage: "Môi trường", goal: "Ổn định năng suất",
+        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "pdf4", title: "Tối ưu vòng quay vốn (360°)", species: "Cá tra", stage: "Tài chính", goal: "Tối ưu vốn",
+        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+    ];
 
-    const CurrentComponent = navItems.find(item => item.id === activeTab)?.component;
+    const VIDEO_GALLERY = [
+      { id:"v1", title:"Flycam toàn cảnh nhà máy", src:"https://www.youtube.com/embed/1La4QzGeaaQ" },
+      { id:"v2", title:"Dây chuyền sản xuất tự động", src:"https://www.youtube.com/embed/aqz-KE-bpKQ" },
+      { id:"v3", title:"Kho lạnh & container xuất", src:"https://www.youtube.com/embed/oUFJJNQGwhk" }
+    ];
 
-    return (
-        <div className="bg-light-bg font-sans text-dark-text">
-            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} navItems={navItems.map(({ id, label }) => ({ id, label }))} />
-            <main>
-                {/* The Hero component is handled separately due to its full-screen nature */}
-                {activeTab === 'home' ? <Hero setActiveTab={setActiveTab} /> : navItems.find(item => item.id === activeTab)?.component}
-            </main>
-            <Footer />
+    const WAREHOUSES = [
+      { id:"dc1", name:"Cần Thơ DC", region:"ĐBSCL", lat:10.045, lng:105.746 },
+      { id:"dc2", name:"Long An DC", region:"ĐBSCL", lat:10.695, lng:106.242 },
+      { id:"dc3", name:"Hồ Chí Minh Hub", region:"Miền Nam", lat:10.823, lng:106.629 },
+      { id:"dc4", name:"Nha Trang Node", region:"Miền Trung", lat:12.238, lng:109.196 },
+      { id:"dc5", name:"Hải Phòng Port", region:"Miền Bắc", lat:20.861, lng:106.683 }
+    ];
+
+    const DESTINATIONS = [
+      { id:"dst1", name:"An Giang (cá tra)", region:"ĐBSCL", lat:10.375, lng:105.420 },
+      { id:"dst2", name:"Bạc Liêu (tôm/cá)", region:"ĐBSCL", lat:9.294, lng:105.727 },
+      { id:"dst3", name:"Cà Mau (tôm/cá)", region:"ĐBSCL", lat:9.176, lng:105.152 },
+      { id:"dst4", name:"Quảng Nam (cá rô phi)", region:"Miền Trung", lat:15.573, lng:108.474 },
+      { id:"dst5", name:"Hải Dương (cá lóc)", region:"Miền Bắc", lat:20.938, lng:106.320 }
+    ];
+
+    const NEWS = [
+      { id:"n1", tag:"Giá nguyên liệu", title:"Bột cá ổn định, dầu đậu nành tăng nhẹ",
+        date:"2025-07-28", excerpt:"Giá dầu đậu nành tăng 2.1% do nguồn cung thắt chặt; bột cá giữ mức ổn định theo quý." },
+      { id:"n2", tag:"Xuất khẩu", title:"Nhu cầu thị trường Trung Đông tăng",
+        date:"2025-07-15", excerpt:"Các nhà nhập khẩu tăng đơn hàng dòng premium; yêu cầu chứng nhận truy xuất nguồn gốc rõ ràng." },
+      { id:"n3", tag:"Dịch bệnh", title:"Cảnh báo Vibrio vùng ven biển miền Trung",
+        date:"2025-06-30", excerpt:"Khuyến nghị tăng cường sát trùng, quản trị tảo, bổ sung probiotics trong giai đoạn chuyển mùa." }
+    ];
+
+    /** --------------------------
+     * Utils
+     * -------------------------- */
+    const currencyVND = n => n.toLocaleString("vi-VN") + " ₫";
+    const ceil = Math.ceil;
+
+    // Haversine for distance (km)
+    const distanceKm = (a, b) => {
+      const toRad = deg => (deg*Math.PI)/180;
+      const R = 6371;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const s1 = Math.sin(dLat/2)**2 +
+                 Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+      const c = 2*Math.atan2(Math.sqrt(s1), Math.sqrt(1-s1));
+      return R*c;
+    };
+
+    /** --------------------------
+     * Navbar (sticky + SPA tabs)
+     * -------------------------- */
+    const Navbar = ({active, onChange}) => {
+      return (
+        <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl font-extrabold tracking-wider" aria-label="KINGBULL logo text">
+                <span className="text-kb-blue">KING</span><span className="text-kb-green">BULL</span>
+              </div>
+              <span className="hidden sm:inline-block text-sm text-slate-500">“Đột phá tăng trưởng, dẫn đầu lợi nhuận”</span>
+            </div>
+            <ul className="hidden lg:flex items-center gap-1">
+              {TABS.map(t => (
+                <li key={t.key}>
+                  <button
+                    className={"px-3 py-2 rounded-lg text-sm font-medium kb-focus " + (active===t.key ? "bg-kb-blue text-white" : "hover:bg-slate-100")}
+                    onClick={() => onChange(t.key)}
+                    aria-current={active===t.key ? "page" : undefined}
+                  >
+                    {t.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="lg:hidden">
+              <select
+                className="kb-focus border rounded-lg px-2 py-2"
+                value={active}
+                aria-label="Chọn mục"
+                onChange={e => onChange(e.target.value)}
+              >
+                {TABS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+              </select>
+            </div>
+          </div>
+        </nav>
+      );
+    };
+
+    /** --------------------------
+     * Hero (Home)
+     * -------------------------- */
+    const Hero = ({onSeeCases, onContact}) => {
+      return (
+        <div className="brand-gradient">
+          <Container id="home-hero">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <motion.div
+                initial={{opacity:0, y:20}}
+                animate={{opacity:1, y:0}}
+                transition={{duration:.6}}
+              >
+                <Pill> Aquafeed B2B • Việt Nam </Pill>
+                <h1 className="text-3xl sm:text-5xl font-black leading-tight mt-3">
+                  KINGBULL — <span className="text-kb-blue">Chuyên nghiệp</span>, <span className="text-kb-green">Tin cậy</span>, <span className="text-kb-gold">Hướng kết quả</span>
+                </h1>
+                <p className="text-slate-600 mt-4 max-w-xl">
+                  Năng lực sản xuất & cung ứng quy mô lớn, tối ưu lợi nhuận cho đại lý và trang trại nuôi quy mô.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button onClick={onSeeCases} className="kb-focus bg-kb-blue text-white px-4 py-2 rounded-xl shadow-soft">
+                    Xem Hồ sơ Dự án Thành công
+                  </button>
+                  <button onClick={onContact} className="kb-focus px-4 py-2 rounded-xl border border-slate-200">
+                    Liên hệ Hợp tác
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mt-8">
+                  <Stat label="Năng lực cung ứng" value="> 100.000 tấn/năm" />
+                  <Stat label="Mạng lưới phân phối" value="63 tỉnh thành" />
+                  <Stat label="Hỗ trợ kỹ thuật" value="24/7" />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{opacity:0, scale:.98}}
+                animate={{opacity:1, scale:1}}
+                transition={{duration:.6, delay:.1}}
+                className="rounded-2xl overflow-hidden shadow-soft border border-slate-100 bg-black"
+              >
+                <div className="aspect-video">
+                  <iframe
+                    title="Flycam nhà máy"
+                    src="https://www.youtube.com/embed/1La4QzGeaaQ"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="mt-10 grid sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-white shadow-soft border border-slate-100">
+                <h3 className="font-bold">Năng lực cung ứng lớn</h3>
+                <p className="text-sm text-slate-600 mt-1">Chuỗi sản xuất – kho – logistics đồng bộ, giao nhanh đúng hẹn.</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white shadow-soft border border-slate-100">
+                <h3 className="font-bold">Tối ưu lợi nhuận</h3>
+                <p className="text-sm text-slate-600 mt-1">Công thức dinh dưỡng theo ROI, tối ưu FCR và vòng quay vốn.</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white shadow-soft border border-slate-100">
+                <h3 className="font-bold">Hỗ trợ kỹ thuật 24/7</h3>
+                <p className="text-sm text-slate-600 mt-1">Đội ngũ kỹ thuật theo khu vực, phản hồi nhanh, onsite khi cần.</p>
+              </div>
+            </div>
+          </Container>
         </div>
+      );
+    };
+
+    /** --------------------------
+     * Case Studies
+     * -------------------------- */
+    const CaseStudyCard = ({item, onOpen}) => {
+      const revenue = item.harvestTons * 1000 * item.pricePerKg;
+      const feedCost = item.harvestTons * 1000 * item.fcr * item.feedCostPerKg;
+      const net = revenue - feedCost;
+      const roi = net / feedCost;
+
+      return (
+        <div className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-soft">
+          <div className="aspect-video bg-slate-100">
+            <img src={item.images[0]} alt={`Ảnh ao nuôi - ${item.name}`} className="w-full h-full object-cover" />
+          </div>
+          <div className="p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-bold text-lg">{item.name}</h3>
+              <Pill>{item.species}</Pill>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-sm">
+              <div className="p-2 rounded-lg bg-slate-50">Diện tích: <b>{item.areaHa} ha</b></div>
+              <div className="p-2 rounded-lg bg-slate-50">Chu kỳ: <b>{item.cycleDays} ngày</b></div>
+              <div className="p-2 rounded-lg bg-slate-50">Sản lượng: <b>{item.harvestTons} tấn</b></div>
+              <div className="p-2 rounded-lg bg-slate-50">FCR: <b>{item.fcr}</b></div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-3 text-sm">
+              <div className="p-2 rounded-lg bg-slate-50">Doanh thu: <b>{currencyVND(revenue)}</b></div>
+              <div className="p-2 rounded-lg bg-slate-50">Chi phí thức ăn: <b>{currencyVND(feedCost)}</b></div>
+              <div className="p-2 rounded-lg bg-slate-50">ROI: <b>{(roi*100).toFixed(1)}%</b></div>
+            </div>
+            <button onClick={()=>onOpen(item)} className="kb-focus mt-3 w-full bg-kb-blue text-white py-2 rounded-xl">Xem chi tiết</button>
+          </div>
+        </div>
+      );
+    };
+
+    const CaseStudyDetail = ({item, onClose}) => {
+      if(!item) return null;
+      const revenue = item.harvestTons * 1000 * item.pricePerKg;
+      const feedCost = item.harvestTons * 1000 * item.fcr * item.feedCostPerKg;
+      const net = revenue - feedCost;
+      const roi = net / feedCost;
+      return (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
+          <div className="absolute inset-x-0 top-10 mx-auto max-w-4xl">
+            <motion.div
+              initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{duration:.25}}
+              className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-4 border-b">
+                <div>
+                  <h3 className="font-bold text-xl">{item.name}</h3>
+                  <p className="text-sm text-slate-500">{item.species} • {item.started} → {item.finished}</p>
+                </div>
+                <button className="kb-focus px-3 py-1 rounded-lg border" onClick={onClose} aria-label="Đóng">Đóng</button>
+              </div>
+              <div className="grid lg:grid-cols-2 gap-0">
+                <div className="aspect-video bg-black">
+                  <iframe title={"Video - " + item.name} src={item.video} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+                </div>
+                <div className="p-4">
+                  <p className="text-slate-700">{item.ownerNote}</p>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <Stat label="Doanh thu" value={currencyVND(revenue)} />
+                    <Stat label="Chi phí thức ăn" value={currencyVND(feedCost)} />
+                    <Stat label="Lợi nhuận (ước)" value={currencyVND(net)} />
+                    <Stat label="ROI" value={(roi*100).toFixed(1) + "%"} />
+                  </div>
+                  <div className="mt-4">
+                    <h4 className="font-semibold">Ghi chú kỹ thuật</h4>
+                    <ul className="list-disc list-inside text-sm text-slate-600 mt-2">
+                      <li>Quản trị oxy hòa tan > 5 mg/L, cho ăn theo đường cong tăng trưởng.</li>
+                      <li>Tối ưu FCR theo cỡ cá, bổ sung enzymes & probiotics khi chuyển cỡ.</li>
+                      <li>Theo dõi NH₃/NH₄⁺, NO₂⁻, độ kiềm 80–120 mg/L.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      );
+    };
+
+    const CaseStudies = () => {
+      const [detail, setDetail] = useState(null);
+      const [filter, setFilter] = useState("Tất cả");
+      const speciesList = ["Tất cả", ...Array.from(new Set(CASE_STUDIES.map(c => c.species)))];
+      const filtered = CASE_STUDIES.filter(c => filter==="Tất cả" ? true : c.species===filter);
+      return (
+        <Container id="cases">
+          <SectionTitle title="Hồ sơ dự án nuôi thành công" subtitle="Dữ liệu ROI minh bạch — video, hình ảnh & nhận xét chủ trại" />
+          <div className="flex items-center gap-3 mb-5">
+            <label className="text-sm">Loài nuôi</label>
+            <select className="kb-focus border rounded-lg px-3 py-2" value={filter} onChange={e=>setFilter(e.target.value)} aria-label="Lọc theo loài">
+              {speciesList.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map(item => <CaseStudyCard key={item.id} item={item} onOpen={setDetail} />)}
+          </div>
+          <AnimatePresence>{detail && <CaseStudyDetail item={detail} onClose={()=>setDetail(null)} />}</AnimatePresence>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * PDF Library (filters)
+     * -------------------------- */
+    const PDFLibrary = () => {
+      const [species, setSpecies] = useState("Tất cả");
+      const [stage, setStage] = useState("Tất cả");
+      const [goal, setGoal] = useState("Tất cả");
+
+      const speciesList = ["Tất cả", ...Array.from(new Set(PDF_LIBRARY.map(x=>x.species)))];
+      const stageList   = ["Tất cả", ...Array.from(new Set(PDF_LIBRARY.map(x=>x.stage)))];
+      const goalList    = ["Tất cả", ...Array.from(new Set(PDF_LIBRARY.map(x=>x.goal)))];
+
+      const filtered = PDF_LIBRARY.filter(x =>
+        (species==="Tất cả" || x.species===species) &&
+        (stage==="Tất cả"   || x.stage===stage) &&
+        (goal==="Tất cả"    || x.goal===goal)
+      );
+
+      return (
+        <Container id="library">
+          <SectionTitle title="Thư viện kỹ thuật chuyên sâu" subtitle="Bài viết PDF về FCR, phòng bệnh, môi trường nước, vòng quay vốn" />
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <Select label="Loài" value={species} setValue={setSpecies} options={speciesList} />
+            <Select label="Giai đoạn" value={stage} setValue={setStage} options={stageList} />
+            <Select label="Mục tiêu" value={goal} setValue={setGoal} options={goalList} />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map(x=>(
+              <div key={x.id} className="p-4 rounded-2xl bg-white border border-slate-100 shadow-soft">
+                <h3 className="font-semibold">{x.title}</h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Pill>{x.species}</Pill>
+                  <Pill>{x.stage}</Pill>
+                  <Pill>{x.goal}</Pill>
+                </div>
+                <a className="kb-focus mt-4 inline-block bg-kb-blue text-white px-3 py-2 rounded-lg"
+                   href={x.url} target="_blank" rel="noreferrer" download>
+                  Tải PDF
+                </a>
+              </div>
+            ))}
+          </div>
+        </Container>
+      );
+    };
+
+    const Select = ({label, value, setValue, options}) => (
+      <label className="text-sm">
+        <span className="mr-2 text-slate-600">{label}</span>
+        <select className="kb-focus border rounded-lg px-3 py-2" value={value} onChange={e=>setValue(e.target.value)}>
+          {options.map(o => <option key={o}>{o}</option>)}
+        </select>
+      </label>
     );
-}
+
+    /** --------------------------
+     * Video Section
+     * -------------------------- */
+    const VideoSection = () => (
+      <Container id="videos">
+        <SectionTitle title="Video quy trình sản xuất & năng lực nhà máy" />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {VIDEO_GALLERY.map(v=>(
+            <div key={v.id} className="rounded-2xl overflow-hidden bg-black shadow-soft border border-slate-200">
+              <div className="aspect-video">
+                <iframe title={v.title} src={v.src} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+              </div>
+              <div className="p-3 bg-white">
+                <h3 className="font-semibold">{v.title}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <img className="rounded-xl w-full h-28 object-cover" alt="Kho lạnh" src="https://images.unsplash.com/photo-1541911087797-f89237bd95d6?q=80&w=1200&auto=format&fit=crop" />
+          <img className="rounded-xl w-full h-28 object-cover" alt="Container xuất hàng" src="https://images.unsplash.com/photo-1544989164-31dc3c645987?q=80&w=1200&auto=format&fit=crop" />
+          <img className="rounded-xl w-full h-28 object-cover" alt="Kiểm định chất lượng" src="https://images.unsplash.com/photo-1581090700227-1e37b190418e?q=80&w=1200&auto=format&fit=crop" />
+          <img className="rounded-xl w-full h-28 object-cover" alt="Dây chuyền sản xuất" src="https://images.unsplash.com/photo-1581093588401-a1b1a1c5381e?q=80&w=1200&auto=format&fit=crop" />
+        </div>
+      </Container>
+    );
+
+    /** --------------------------
+     * Dealer Portal (mock login)
+     * -------------------------- */
+    const DealerPortal = () => {
+      const [logged, setLogged] = useState(false);
+      const [email, setEmail] = useState("");
+      const [code, setCode] = useState("");
+      const [msg, setMsg] = useState("");
+
+      const submit = e => {
+        e.preventDefault();
+        if(code.trim().toUpperCase() === "KINGBULL2025" && email.includes("@")){
+          setLogged(true);
+          setMsg("");
+        } else {
+          setMsg("Mã truy cập hoặc email không hợp lệ.");
+        }
+      };
+
+      return (
+        <Container id="dealer">
+          <SectionTitle title="Khu vực Dành cho Đại lý & Trang trại" subtitle="Bảo vệ nội dung bằng đăng nhập mock" />
+          {!logged ? (
+            <form onSubmit={submit} className="max-w-lg p-6 rounded-2xl bg-white border border-slate-200 shadow-soft">
+              <label className="block mb-4">
+                <span className="text-sm text-slate-600">Email</span>
+                <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" placeholder="you@company.com" />
+              </label>
+              <label className="block mb-4">
+                <span className="text-sm text-slate-600">Mã truy cập</span>
+                <input required type="password" value={code} onChange={e=>setCode(e.target.value)} className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" placeholder="KINGBULL2025" />
+              </label>
+              {msg && <p className="text-sm text-red-600 mb-3">{msg}</p>}
+              <button className="kb-focus bg-kb-blue text-white px-4 py-2 rounded-xl">Đăng nhập</button>
+            </form>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+                <h3 className="font-bold">Tài liệu nội bộ</h3>
+                <ul className="list-disc list-inside text-sm mt-2">
+                  <li><a className="text-kb-blue underline" href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noreferrer">Bảng giá số lượng lớn (PDF)</a></li>
+                  <li><a className="text-kb-blue underline" href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noreferrer">Chính sách chiết khấu (PDF)</a></li>
+                  <li><a className="text-kb-blue underline" href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noreferrer">Tài liệu huấn luyện kỹ thuật (PDF)</a></li>
+                </ul>
+              </div>
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+                <h3 className="font-bold">Video Training</h3>
+                <ul className="list-disc list-inside text-sm mt-2">
+                  <li><a className="text-kb-blue underline" href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank" rel="noreferrer">Quy trình phối trộn & kiểm soát chất lượng</a></li>
+                  <li><a className="text-kb-blue underline" href="https://www.youtube.com/watch?v=oUFJJNQGwhk" target="_blank" rel="noreferrer">Vận hành kho lạnh & an toàn</a></li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * Map Supply (Leaflet + filter)
+     * -------------------------- */
+    const MapSupply = () => {
+      const mapRef = useRef(null);
+      const layerRef = useRef(null);
+      const [region, setRegion] = useState("Tất cả");
+
+      useEffect(()=>{
+        if(!mapRef.current){
+          const map = L.map('kb-map', { zoomControl: true }).setView([10.5, 106], 6);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+          }).addTo(map);
+          mapRef.current = map;
+        }
+      },[]);
+
+      useEffect(()=>{
+        // clear old
+        if(layerRef.current){
+          layerRef.current.clearLayers();
+        } else {
+          layerRef.current = L.layerGroup().addTo(mapRef.current);
+        }
+
+        // warehouses
+        WAREHOUSES
+          .filter(w => region==="Tất cả" ? true : w.region===region)
+          .forEach(w=>{
+            const mk = L.marker([w.lat, w.lng]).addTo(layerRef.current);
+            mk.bindPopup(`<b>${w.name}</b><br/>Khu vực: ${w.region}`);
+          });
+
+        // destinations
+        DESTINATIONS
+          .filter(d => region==="Tất cả" ? true : d.region===region)
+          .forEach(d=>{
+            const mk = L.circleMarker([d.lat, d.lng], { radius:8, color:"#0EA4E8" }).addTo(layerRef.current);
+            mk.bindPopup(`<b>${d.name}</b><br/>Khu vực: ${d.region}`);
+          });
+      },[region]);
+
+      return (
+        <Container id="map">
+          <SectionTitle title="Bản đồ năng lực cung ứng" subtitle="Vùng phân phối, kho bãi, thời gian giao hàng ước tính" />
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm">Khu vực</label>
+            <select className="kb-focus border rounded-lg px-3 py-2" value={region} onChange={e=>setRegion(e.target.value)}>
+              <option>Tất cả</option>
+              <option>ĐBSCL</option>
+              <option>Miền Nam</option>
+              <option>Miền Trung</option>
+              <option>Miền Bắc</option>
+            </select>
+          </div>
+          <div id="kb-map" role="img" aria-label="Bản đồ năng lực cung ứng"></div>
+          <p className="text-xs text-slate-500 mt-2">Thời gian giao hàng phụ thuộc điều kiện vận tải; dữ liệu mang tính mô phỏng.</p>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * Support 24/7
+     * -------------------------- */
+    const SupportPanel = () => {
+      const [form, setForm] = useState({name:"", phone:"", region:"", note:""});
+      const [ok, setOk] = useState(false);
+      const submit = e => { e.preventDefault(); setOk(true); };
+      return (
+        <Container id="support">
+          <SectionTitle title="Hỗ trợ kỹ thuật 24/7" />
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+              <h3 className="font-bold mb-2">Liên hệ nhanh</h3>
+              <a className="kb-focus block bg-kb-blue text-white text-center px-4 py-2 rounded-xl mb-2" href={COMPANY.hotlineLink}>Gọi Hotline kỹ thuật</a>
+              <a className="kb-focus block bg-slate-100 text-slate-800 text-center px-4 py-2 rounded-xl mb-2" href={COMPANY.zaloLink} target="_blank" rel="noreferrer">Chat Zalo OA</a>
+              <a className="kb-focus block bg-white border text-center px-4 py-2 rounded-xl" href={"mailto:" + COMPANY.email}>Gửi Email</a>
+              <div className="mt-4 text-sm text-slate-600">
+                <p><b>Địa chỉ: </b>{COMPANY.address}</p>
+                <p><b>Điện thoại: </b>0{COMPANY.phone}</p>
+                <p><b>Email: </b>{COMPANY.email}</p>
+              </div>
+            </div>
+            <form onSubmit={submit} className="md:col-span-2 p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+              <h3 className="font-bold mb-2">Đặt lịch hẹn với chuyên gia</h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <label className="text-sm">Họ tên
+                  <input required className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={form.name} onChange={e=>setForm({...form, name:e.target.value})}/>
+                </label>
+                <label className="text-sm">Số điện thoại
+                  <input required className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})}/>
+                </label>
+                <label className="text-sm">Khu vực
+                  <select required className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={form.region} onChange={e=>setForm({...form, region:e.target.value})}>
+                    <option value="">Chọn</option>
+                    <option>ĐBSCL</option><option>Miền Nam</option><option>Miền Trung</option><option>Miền Bắc</option>
+                  </select>
+                </label>
+                <label className="text-sm">Ghi chú
+                  <input className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={form.note} onChange={e=>setForm({...form, note:e.target.value})}/>
+                </label>
+              </div>
+              <button className="kb-focus mt-4 bg-kb-green text-white px-4 py-2 rounded-xl">Đặt lịch</button>
+              {ok && <p className="text-sm text-kb-blue mt-2">Đã nhận yêu cầu! Kỹ thuật viên khu vực sẽ liên hệ sớm.</p>}
+            </form>
+          </div>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * Logistics Calculator
+     * -------------------------- */
+    const LogisticsCalc = () => {
+      const [qtyTon, setQtyTon] = useState(50);
+      const [destId, setDestId] = useState(DESTINATIONS[0].id);
+      const [result, setResult] = useState(null);
+
+      const calc = e => {
+        e.preventDefault();
+        const dest = DESTINATIONS.find(d => d.id===destId);
+        // Find nearest warehouse by distance
+        let best = null, bestD = Infinity;
+        WAREHOUSES.forEach(w=>{
+          const d = distanceKm({lat:w.lat,lng:w.lng}, {lat:dest.lat,lng:dest.lng});
+          if(d<bestD){bestD=d; best=w;}
+        });
+        // Params
+        const capacityPerContainerTon = 25;
+        const trips = ceil(qtyTon / capacityPerContainerTon);
+        // Speed & time (rough): 45 km/h trucking + 2h handling
+        const hours = bestD / 45 + 2;
+        const etaDays = Math.max(1, Math.round(hours/8)); // working hours/day
+        setResult({
+          dc: best.name, region: best.region,
+          distanceKm: Math.round(bestD),
+          trips, etaDays
+        });
+      };
+
+      return (
+        <Container id="logistics">
+          <SectionTitle title="Công cụ Tính Logistics & Kho Bãi" subtitle="Mô phỏng số chuyến container & thời gian giao hàng" />
+          <form onSubmit={calc} className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft max-w-3xl">
+            <div className="grid sm:grid-cols-3 gap-4">
+              <label className="text-sm">Số lượng (tấn)
+                <input type="number" min="1" className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={qtyTon} onChange={e=>setQtyTon(Number(e.target.value||0))}/>
+              </label>
+              <label className="text-sm">Địa điểm giao
+                <select className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={destId} onChange={e=>setDestId(e.target.value)}>
+                  {DESTINATIONS.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </label>
+              <div className="self-end">
+                <button className="kb-focus w-full bg-kb-blue text-white px-4 py-2 rounded-xl">Tính mô phỏng</button>
+              </div>
+            </div>
+            {result && (
+              <div className="grid sm:grid-cols-4 gap-3 mt-5">
+                <Stat label="Kho xuất phát" value={result.dc} />
+                <Stat label="Khu vực kho" value={result.region} />
+                <Stat label="Khoảng cách (km)" value={result.distanceKm} />
+                <Stat label="Số chuyến (ước)" value={result.trips} />
+                <Stat label="Thời gian giao (ngày)" value={result.etaDays} />
+              </div>
+            )}
+          </form>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * News
+     * -------------------------- */
+    const NewsCard = ({item}) => (
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-soft">
+        <div className="flex items-center justify-between">
+          <Pill>{item.tag}</Pill>
+          <span className="text-xs text-slate-500">{item.date}</span>
+        </div>
+        <h3 className="font-semibold mt-2">{item.title}</h3>
+        <p className="text-sm text-slate-600 mt-1">{item.excerpt}</p>
+      </div>
+    );
+
+    const News = () => {
+      const [tag, setTag] = useState("Tất cả");
+      const tags = ["Tất cả", ...Array.from(new Set(NEWS.map(n=>n.tag)))];
+      const filtered = NEWS.filter(n => tag==="Tất cả" ? true : n.tag===tag);
+      return (
+        <Container id="news">
+          <SectionTitle title="Tin tức ngành & phân tích thị trường" subtitle="Cập nhật giá nguyên liệu, xu hướng xuất khẩu, dịch bệnh thủy sản" />
+          <div className="flex items-center gap-3 mb-5">
+            <label className="text-sm">Chủ đề</label>
+            <select className="kb-focus border rounded-lg px-3 py-2" value={tag} onChange={e=>setTag(e.target.value)}>
+              {tags.map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map(n => <NewsCard key={n.id} item={n} />)}
+          </div>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * R&D section
+     * -------------------------- */
+    const RDSection = () => {
+      const [sent, setSent] = useState(false);
+      const [f, setF] = useState({org:"", contact:"", proposal:""});
+      const submit = e => { e.preventDefault(); setSent(true); };
+      return (
+        <Container id="rd">
+          <SectionTitle title="Chương trình hợp tác R&D" subtitle="Viện nghiên cứu, trường đại học, trại nuôi thử nghiệm" />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+              <h3 className="font-bold mb-2">Giới thiệu</h3>
+              <p className="text-sm text-slate-600">
+                KINGBULL sẵn sàng đồng hành triển khai dự án R&D về dinh dưỡng, công nghệ quy trình, sinh học môi trường và tối ưu tài chính.
+              </p>
+              <ul className="list-disc list-inside text-sm text-slate-600 mt-3">
+                <li>Đồng phát triển công thức cho từng loài/giai đoạn.</li>
+                <li>Thử nghiệm thực địa có giám sát KPI rõ ràng.</li>
+                <li>Chia sẻ dữ liệu (ẩn danh) và công bố khoa học.</li>
+              </ul>
+            </div>
+            <form onSubmit={submit} className="p-5 rounded-2xl bg-white border border-slate-200 shadow-soft">
+              <h3 className="font-bold mb-2">Đăng ký hợp tác</h3>
+              <label className="block text-sm mb-3">Tổ chức/Đơn vị
+                <input required className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={f.org} onChange={e=>setF({...f,org:e.target.value})}/>
+              </label>
+              <label className="block text-sm mb-3">Người liên hệ
+                <input required className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={f.contact} onChange={e=>setF({...f,contact:e.target.value})}/>
+              </label>
+              <label className="block text-sm mb-3">Đề xuất ngắn gọn
+                <textarea required rows="4" className="kb-focus mt-1 w-full border rounded-lg px-3 py-2" value={f.proposal} onChange={e=>setF({...f,proposal:e.target.value})}></textarea>
+              </label>
+              <button className="kb-focus bg-kb-green text-white px-4 py-2 rounded-xl">Gửi đề xuất</button>
+              {sent && <p className="text-sm text-kb-blue mt-2">Đã nhận thông tin! Chúng tôi sẽ phản hồi qua email.</p>}
+            </form>
+          </div>
+        </Container>
+      );
+    };
+
+    /** --------------------------
+     * Footer
+     * -------------------------- */
+    const Footer = () => (
+      <footer className="mt-12 border-t border-slate-200">
+        <Container id="footer">
+          <div className="grid md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <div className="text-xl font-extrabold"><span className="text-kb-blue">KING</span><span className="text-kb-green">BULL</span></div>
+              <p className="text-slate-600 mt-1">{COMPANY.slogan}</p>
+            </div>
+            <div>
+              <p><b>Doanh nghiệp:</b> {COMPANY.name}</p>
+              <p><b>MST:</b> {COMPANY.tax}</p>
+              <p><b>Địa chỉ:</b> {COMPANY.address}</p>
+            </div>
+            <div>
+              <p><b>Email:</b> {COMPANY.email}</p>
+              <p><b>Điện thoại:</b> 0{COMPANY.phone}</p>
+              <div className="mt-2 flex gap-2">
+                <a className="kb-focus px-3 py-1 rounded-lg border" href={COMPANY.hotlineLink}>Hotline</a>
+                <a className="kb-focus px-3 py-1 rounded-lg border" href={COMPANY.zaloLink} target="_blank" rel="noreferrer">Zalo OA</a>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-6">© {(new Date()).getFullYear()} KINGBULL Việt Nam. All rights reserved.</p>
+        </Container>
+      </footer>
+    );
+
+    /** --------------------------
+     * App (SPA tabs + sections)
+     * -------------------------- */
+    const App = () => {
+      const [active, setActive] = useState("home");
+
+      const scrollToMain = () => document.getElementById("main")?.focus();
+
+      return (
+        <div>
+          <Navbar active={active} onChange={setActive} />
+          <main id="main" tabIndex="-1">
+            <Hero
+              onSeeCases={() => setActive("cases")}
+              onContact={() => setActive("support")}
+            />
+            {/* SPA tabs: render selected section prominently; other sections remain available for deep links */}
+            <AnimatePresence mode="wait">
+              {active==="home" && (
+                <motion.div key="home" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <CaseStudies />
+                  <PDFLibrary />
+                  <VideoSection />
+                </motion.div>
+              )}
+              {active==="cases" && (
+                <motion.div key="cases" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <CaseStudies />
+                </motion.div>
+              )}
+              {active==="library" && (
+                <motion.div key="library" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <PDFLibrary />
+                </motion.div>
+              )}
+              {active==="videos" && (
+                <motion.div key="videos" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <VideoSection />
+                </motion.div>
+              )}
+              {active==="dealer" && (
+                <motion.div key="dealer" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <DealerPortal />
+                </motion.div>
+              )}
+              {active==="map" && (
+                <motion.div key="map" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <MapSupply />
+                </motion.div>
+              )}
+              {active==="support" && (
+                <motion.div key="support" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <SupportPanel />
+                </motion.div>
+              )}
+              {active==="logistics" && (
+                <motion.div key="logistics" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <LogisticsCalc />
+                </motion.div>
+              )}
+              {active==="news" && (
+                <motion.div key="news" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <News />
+                </motion.div>
+              )}
+              {active==="rd" && (
+                <motion.div key="rd" initial={{opacity:0, y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
+                  <RDSection />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+          <Footer />
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
