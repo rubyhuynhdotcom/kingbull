@@ -211,6 +211,54 @@
       .btn,.lift{transition:none}
       header.nav{transition:none}
     }
+    /* === HERO LEFT (theo ảnh mẫu) ============================== */
+.hero-left{max-width:760px}
+.hero-badge{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:10px 14px; border-radius:999px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.26);
+  color:#E6F0FF; font-weight:800; letter-spacing:.2px;
+  backdrop-filter: blur(6px) saturate(140%);
+}
+.hero-badge-icon{
+  display:grid; place-items:center; width:26px; height:26px;
+  border-radius:999px; background:#0ea4e81a; color:#fff
+}
+
+.hero-brand{margin:.6rem 0 0 0; line-height:1}
+.hero-brand .kb-line1{
+  display:block; font-weight:1000; font-size:clamp(46px,7.2vw,84px); color:#fff;
+  letter-spacing:1px; text-shadow:0 6px 22px rgba(0,0,0,.35)
+}
+.hero-brand .kb-line2{
+  display:block; margin-top:.2rem; font-weight:1000; font-size:clamp(42px,6.6vw,76px);
+  background:linear-gradient(90deg, var(--kb-green) 0%, var(--kb-gold) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  letter-spacing:1px; text-shadow:0 6px 22px rgba(0,0,0,.25)
+}
+
+.hero-slogan{
+  margin:.8rem 0 0 0; font-weight:900; color:var(--kb-gold);
+  font-size:clamp(18px,2.4vw,22px)
+}
+.hero-lead{margin-top:12px; max-width:760px}
+
+.hero-cta{display:flex; flex-wrap:wrap; gap:18px; align-items:center; margin-top:22px}
+.btn.btn-lg{padding:14px 20px; border-radius:16px; font-size:16px}
+.hero-input{
+  flex:1 1 320px; min-width:280px; max-width:460px;
+  padding:14px 16px; border-radius:16px;
+  border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.9); color:#0b1220;
+  box-shadow:0 10px 30px rgba(3,10,32,.18); transition:box-shadow .25s var(--bezier), border-color .25s var(--bezier)
+}
+.hero-input::placeholder{color:#5f6b80}
+.hero-input:hover{box-shadow:0 16px 46px rgba(3,10,32,.28)}
+.hero-input:focus{border-color:#9edcff; box-shadow:0 0 0 4px #0ea4e833}
+
+/* Giữ parallax nhẹ theo code cũ */
+#heroTitle{will-change:transform,opacity}
+
   </style>
 </head>
 
