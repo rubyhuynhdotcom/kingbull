@@ -1,428 +1,3 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KINGBULL Việt Nam — Aquafeed B2B Web‑App</title>
-  <meta name="description" content="Interactive web-app giới thiệu & tư vấn chuyên sâu cho KINGBULL Việt Nam (Aquafeed B2B)" />
-  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    :root{
-      --kb-blue:#0EA4E8; --kb-green:#2BCB53; --kb-gold:#FFBE00; --kb-dark:#0F172A;
-      --bg:#ffffff; --muted:#f6f7fb; --text:#0b1220; --text-2:#51607a; --ring: #74d1f5;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-    a{color:var(--kb-blue);text-decoration:none}
-    a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
-      outline:3px solid var(--ring);outline-offset:2px;border-radius:10px
-    }
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    .skip{position:absolute;top:8px;left:8px;background:#fff;padding:6px 10px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    .container{max-width:1164px;margin:auto;padding:48px 20px}
-    .section{scroll-margin-top:84px}
-    header.nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid #eef0f5}
-    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px;max-width:1164px;margin:auto;padding:0 16px}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.6px}
-    .brand .mark{font-size:22px}
-    .brand .mark .a{color:var(--kb-blue)} .brand .mark .b{color:var(--kb-green)}
-    .brand small{display:none;color:var(--text-2)}
-    @media(min-width:900px){ .brand small{display:block} }
-    .nav-list{display:none;gap:6px;flex-wrap:wrap}
-    @media(min-width:1000px){.nav-list{display:flex}}
-    .nav-btn{border:0;background:transparent;padding:8px 10px;border-radius:10px;font-weight:600;color:#233348}
-    .nav-btn[aria-current="page"], .nav-btn:hover{background:#eef6ff}
-    .nav-select{display:block}@media(min-width:1000px){.nav-select{display:none}}
-    .hero{background:
-      radial-gradient(800px 300px at 12% -30%, rgba(14,164,232,.15), transparent 60%),
-      radial-gradient(600px 260px at 96% -20%, rgba(43,203,83,.12), transparent 60%),
-      linear-gradient(180deg,#fff,#f8fbff 65%, #f3f6fb)}
-    .grid{display:grid;gap:20px}
-    .grid-2{grid-template-columns:1fr}@media(min-width:900px){.grid-2{grid-template-columns:1.1fr 1fr}}
-    .card{background:#fff;border:1px solid #eef0f5;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
-    .card.pad{padding:18px}
-    .pill{display:inline-block;background:#f1f4f9;color:#46576f;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
-    .h1{font-size:34px;font-weight:900;line-height:1.15;margin:8px 0}@media(min-width:900px){.h1{font-size:48px}}
-    .lead{color:var(--text-2)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;font-weight:700;border:1px solid #e6ebf3;background:#fff}
-    .btn.primary{background:var(--kb-blue);color:#fff;border-color:transparent}
-    .btn.ghost{background:#fff}
-    .btn.green{background:var(--kb-green);color:#fff;border-color:transparent}
-    .stats{display:grid;gap:12px;grid-template-columns:repeat(3, minmax(0,1fr))}
-    .stat{padding:12px;border-radius:14px;background:#fff;border:1px solid #eef0f5;box-shadow:0 6px 20px rgba(0,0,0,.04)}
-    .stat small{color:var(--text-2);text-transform:uppercase;letter-spacing:.4px}
-    .k-m{margin-top:14px}
-    .muted{background:var(--muted)}
-    .title{font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px}
-    .title .bar{width:6px;height:22px;background:var(--kb-blue);border-radius:4px}
-    .row{display:grid;gap:16px}
-    @media(min-width:760px){ .row.col-2{grid-template-columns:repeat(2,1fr)} .row.col-3{grid-template-columns:repeat(3,1fr)}}
-    .thumb{aspect-ratio:16/9;width:100%;border:0;border-radius:14px;object-fit:cover;display:block}
-    .list{list-style:disc;padding-left:18px;color:var(--text-2)}
-    .modal{position:fixed;inset:0;background:rgba(9,12,20,.48);display:flex;align-items:flex-start;justify-content:center;padding:40px;z-index:80}
-    .modal .panel{max-width:980px;width:100%;border-radius:18px;background:#fff;border:1px solid #e9edf4;overflow:hidden}
-    .modal .bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eef0f5}
-    .fade{opacity:0;transform:translateY(8px);animation:fadeUp .5s ease forwards}
-    @keyframes fadeUp{to{opacity:1;transform:none}}
-    @media (prefers-reduced-motion: reduce){ .fade{animation:none} .nav-btn,.btn{transition:none} }
-    /* Map */
-    #map{min-height:420px;border-radius:16px;border:1px solid #e8edf5;overflow:hidden}
-    /* Forms */
-    input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #dfe6f2;background:#fff}
-    label span{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px}
-    .hint{font-size:12px;color:var(--text-2)}
-    /* Footer */
-    footer{border-top:1px solid #eef0f5}
-  </style>
-</head>
-<body>
-  <a class="sr-only skip" href="#main">Bỏ qua đến nội dung chính</a>
-
-  <!-- NAVBAR -->
-  <header class="nav" role="navigation" aria-label="Chính">
-    <div class="nav-inner">
-      <div class="brand" aria-label="Logo chữ KINGBULL">
-        <div class="mark"><span class="a">KING</span><span class="b">BULL</span></div>
-        <small>“Đột phá tăng trưởng, dẫn đầu lợi nhuận”</small>
-      </div>
-      <nav class="nav-list" id="navList">
-        <!-- JS sẽ đổ 10 nút tab -->
-      </nav>
-      <label class="nav-select">
-        <select id="navSelect" aria-label="Chọn mục"></select>
-      </label>
-    </div>
-  </header>
-
-  <main id="main">
-
-    <!-- HOME / HERO -->
-    <section id="home" class="section hero">
-      <div class="container">
-        <div class="grid grid-2">
-          <div class="fade">
-            <span class="pill">Aquafeed B2B • Việt Nam</span>
-            <h1 class="h1">KINGBULL — <span style="color:var(--kb-blue)">Chuyên nghiệp</span>, <span style="color:var(--kb-green)">Tin cậy</span>, <span style="color:var(--kb-gold)">Hướng kết quả</span></h1>
-            <p class="lead">Năng lực sản xuất & cung ứng quy mô lớn, tối ưu lợi nhuận cho đại lý và trang trại nuôi quy mô.</p>
-            <div class="k-m">
-              <button class="btn primary" data-goto="cases">Xem Hồ sơ Dự án Thành công</button>
-              <button class="btn ghost" data-goto="support" style="margin-left:8px">Liên hệ Hợp tác</button>
-            </div>
-            <div class="stats k-m">
-              <div class="stat"><small>Năng lực cung ứng</small><div><b>> 100.000 tấn/năm</b></div></div>
-              <div class="stat"><small>Mạng lưới phân phối</small><div><b>63 tỉnh thành</b></div></div>
-              <div class="stat"><small>Hỗ trợ kỹ thuật</small><div><b>24/7</b></div></div>
-            </div>
-          </div>
-          <div class="card fade">
-            <iframe title="Flycam nhà máy" class="thumb" style="border-radius:16px 16px 0 0"
-              src="https://www.youtube.com/embed/1La4QzGeaaQ"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-            <div class="pad" style="padding:12px 16px">
-              <div class="hint">Video flycam toàn cảnh nhà máy</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row col-3 k-m">
-          <div class="card pad"><b>Năng lực cung ứng lớn</b><div class="hint">Chuỗi sản xuất–kho–logistics đồng bộ, giao nhanh đúng hẹn.</div></div>
-          <div class="card pad"><b>Tối ưu lợi nhuận</b><div class="hint">Công thức dinh dưỡng theo ROI, tối ưu FCR & vòng quay vốn.</div></div>
-          <div class="card pad"><b>Hỗ trợ kỹ thuật 24/7</b><div class="hint">Đội ngũ kỹ thuật theo khu vực, phản hồi nhanh, onsite khi cần.</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CASE STUDIES -->
-    <section id="cases" class="section">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Hồ sơ dự án nuôi thành công</span></div>
-        <p class="hint">Dữ liệu ROI minh bạch — video, hình ảnh & nhận xét chủ trại</p>
-        <div class="k-m" style="display:flex;align-items:center;gap:10px">
-          <label style="max-width:240px"><span>Loài nuôi</span><select id="caseFilter"></select></label>
-        </div>
-        <div class="row col-3 k-m" id="caseList"><!-- JS renders --></div>
-      </div>
-    </section>
-
-    <!-- PDF LIBRARY -->
-    <section id="library" class="section muted">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Thư viện kỹ thuật chuyên sâu</span></div>
-        <p class="hint">PDF: FCR, phòng bệnh, môi trường nước, vòng quay vốn</p>
-        <div class="row col-3 k-m" style="gap:12px">
-          <label><span>Loài</span><select id="pdfSpecies"></select></label>
-          <label><span>Giai đoạn</span><select id="pdfStage"></select></label>
-          <label><span>Mục tiêu</span><select id="pdfGoal"></select></label>
-        </div>
-        <div class="row col-3 k-m" id="pdfList"><!-- JS renders --></div>
-      </div>
-    </section>
-
-    <!-- VIDEOS -->
-    <section id="videos" class="section">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Video quy trình sản xuất & năng lực nhà máy</span></div>
-        <div class="row col-3 k-m" id="videoList"><!-- JS renders --></div>
-        <div class="row col-4 k-m" style="grid-template-columns:repeat(4,1fr)">
-          <img class="thumb" alt="Kho lạnh" src="https://images.unsplash.com/photo-1541911087797-f89237bd95d6?q=80&w=1200&auto=format&fit=crop" />
-          <img class="thumb" alt="Container xuất hàng" src="https://images.unsplash.com/photo-1544989164-31dc3c645987?q=80&w=1200&auto=format&fit=crop" />
-          <img class="thumb" alt="Kiểm định chất lượng" src="https://images.unsplash.com/photo-1581090700227-1e37b190418e?q=80&w=1200&auto=format&fit=crop" />
-          <img class="thumb" alt="Dây chuyền sản xuất" src="https://images.unsplash.com/photo-1581093588401-a1b1a1c5381e?q=80&w=1200&auto=format&fit=crop" />
-        </div>
-      </div>
-    </section>
-
-    <!-- DEALER PORTAL -->
-    <section id="dealer" class="section muted">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Khu vực Dành cho Đại lý & Trang trại</span></div>
-        <p class="hint">Đăng nhập mock để xem tài liệu nội bộ</p>
-        <div id="dealerBox" class="k-m"><!-- JS renders form or content --></div>
-      </div>
-    </section>
-
-    <!-- MAP SUPPLY -->
-    <section id="map" class="section">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Bản đồ năng lực cung ứng</span></div>
-        <p class="hint">Vùng phân phối, kho bãi, thời gian giao hàng dự kiến (mô phỏng)</p>
-        <div class="k-m" style="display:flex;align-items:center;gap:10px">
-          <label style="max-width:200px"><span>Khu vực</span><select id="regionFilter">
-            <option>Tất cả</option><option>ĐBSCL</option><option>Miền Nam</option><option>Miền Trung</option><option>Miền Bắc</option>
-          </select></label>
-        </div>
-        <div id="mapWrap" class="k-m"><div id="map"></div></div>
-      </div>
-    </section>
-
-    <!-- SUPPORT -->
-    <section id="support" class="section muted">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Hỗ trợ kỹ thuật 24/7</span></div>
-        <div class="row col-3 k-m" style="grid-template-columns: 1fr 2fr">
-          <div class="card pad">
-            <b>Liên hệ nhanh</b>
-            <div class="k-m" style="display:grid;gap:8px">
-              <a class="btn primary" href="tel:+84587085649">Gọi Hotline kỹ thuật</a>
-              <a class="btn" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Chat Zalo OA</a>
-              <a class="btn" href="mailto:admin@kingbull.com.vn">Gửi Email</a>
-            </div>
-            <div class="k-m hint">
-              <div><b>Địa chỉ:</b> Tầng 6, số 41, CMT8, P. Cái Khế, Cần Thơ</div>
-              <div><b>Điện thoại:</b> 058.708.5649</div>
-              <div><b>Email:</b> admin@kingbull.com.vn</div>
-            </div>
-          </div>
-          <form id="supportForm" class="card pad">
-            <b>Đặt lịch hẹn với chuyên gia</b>
-            <div class="row col-2 k-m">
-              <label><span>Họ tên</span><input required id="spName"/></label>
-              <label><span>Số điện thoại</span><input required id="spPhone"/></label>
-              <label><span>Khu vực</span>
-                <select required id="spRegion"><option value="">Chọn</option><option>ĐBSCL</option><option>Miền Nam</option><option>Miền Trung</option><option>Miền Bắc</option></select>
-              </label>
-              <label><span>Ghi chú</span><input id="spNote"/></label>
-            </div>
-            <div class="k-m"><button class="btn green" type="submit">Đặt lịch</button></div>
-            <div id="supportMsg" class="hint k-m" role="status"></div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- LOGISTICS CALC -->
-    <section id="logistics" class="section">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Công cụ Tính Logistics & Kho Bãi</span></div>
-        <form id="logiForm" class="card pad k-m" style="max-width:860px">
-          <div class="row col-3">
-            <label><span>Số lượng (tấn)</span><input type="number" min="1" id="qtyTon" value="50"/></label>
-            <label><span>Địa điểm giao</span><select id="destSelect"></select></label>
-            <div style="align-self:end"><button class="btn primary" type="submit" style="width:100%">Tính mô phỏng</button></div>
-          </div>
-          <div id="logiResult" class="row col-4 k-m" style="display:none"></div>
-        </form>
-      </div>
-    </section>
-
-    <!-- NEWS -->
-    <section id="news" class="section muted">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Tin tức ngành & phân tích thị trường</span></div>
-        <div class="k-m" style="display:flex;align-items:center;gap:10px">
-          <label style="max-width:220px"><span>Chủ đề</span><select id="newsFilter"></select></label>
-        </div>
-        <div class="row col-3 k-m" id="newsList"><!-- JS renders --></div>
-      </div>
-    </section>
-
-    <!-- R&D -->
-    <section id="rd" class="section">
-      <div class="container">
-        <div class="title"><span class="bar"></span><span>Chương trình hợp tác R&D</span></div>
-        <div class="row col-2 k-m">
-          <div class="card pad">
-            <b>Giới thiệu</b>
-            <ul class="list k-m">
-              <li>Đồng phát triển công thức cho từng loài/giai đoạn.</li>
-              <li>Thử nghiệm thực địa có giám sát KPI rõ ràng.</li>
-              <li>Chia sẻ dữ liệu (ẩn danh) và công bố khoa học.</li>
-            </ul>
-          </div>
-          <form id="rdForm" class="card pad">
-            <b>Đăng ký hợp tác</b>
-            <label class="k-m"><span>Tổ chức/Đơn vị</span><input required id="rdOrg"/></label>
-            <label class="k-m"><span>Người liên hệ</span><input required id="rdContact"/></label>
-            <label class="k-m"><span>Đề xuất ngắn gọn</span><textarea required id="rdProposal" rows="4"></textarea></label>
-            <div class="k-m"><button class="btn green" type="submit">Gửi đề xuất</button></div>
-            <div id="rdMsg" class="hint k-m" role="status"></div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="section">
-    <div class="container">
-      <div class="row col-3">
-        <div>
-          <div class="brand"><div class="mark"><span class="a">KING</span><span class="b">BULL</span></div></div>
-          <div class="hint">“Đột phá tăng trưởng, dẫn đầu lợi nhuận”</div>
-        </div>
-        <div class="hint">
-          <div><b>Doanh nghiệp:</b> CÔNG TY TNHH KINGBULL VIỆT NAM</div>
-          <div><b>MST:</b> 1801608521</div>
-          <div><b>Địa chỉ:</b> Tầng 6, số 41, CMT8, P. Cái Khế, TP Cần Thơ, Việt Nam</div>
-        </div>
-        <div class="hint">
-          <div><b>Email:</b> admin@kingbull.com.vn</div>
-          <div><b>Điện thoại:</b> 058.708.5649</div>
-          <div class="k-m" style="display:flex;gap:8px">
-            <a class="btn" href="tel:+84587085649">Hotline</a>
-            <a class="btn" href="https://zalo.me/0587085649" target="_blank" rel="noreferrer">Zalo OA</a>
-          </div>
-        </div>
-      </div>
-      <div class="hint k-m">© <span id="year"></span> KINGBULL Việt Nam. All rights reserved.</div>
-    </div>
-  </footer>
-
-  <!-- MODAL (Case detail) -->
-  <div id="modal" class="modal" hidden aria-modal="true" role="dialog">
-    <div class="panel">
-      <div class="bar">
-        <div>
-          <b id="mdTitle">Chi tiết dự án</b>
-          <div class="hint" id="mdSub"></div>
-        </div>
-        <button class="btn" id="mdClose" aria-label="Đóng">Đóng</button>
-      </div>
-      <div id="mdBody" style="padding:12px 16px"></div>
-    </div>
-  </div>
-  <!-- Dependencies -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- App Script: Data + Utils -->
-  <script>
-  // --------- Company & Tabs ---------
-  const COMPANY = {
-    name: "CÔNG TY TNHH KINGBULL VIỆT NAM",
-    tax: "1801608521",
-    address: "Tầng 6, số 41, Cách Mạng Tháng Tám, Phường Cái Khế, TP Cần Thơ, Việt Nam",
-    email: "admin@kingbull.com.vn",
-    phone: "058.708.5649",
-    slogan: "Đột phá tăng trưởng, dẫn đầu lợi nhuận",
-    hotlineLink: "tel:+84587085649",
-    zaloLink: "https://zalo.me/0587085649"
-  };
-
-  const TABS = [
-    {key:"home", label:"Home"},
-    {key:"cases", label:"Case Study"},
-    {key:"library", label:"Thư viện PDF"},
-    {key:"videos", label:"Video Nhà máy"},
-    {key:"dealer", label:"Dành cho Đại lý"},
-    {key:"map", label:"Bản đồ Năng lực"},
-    {key:"support", label:"Hỗ trợ 24/7"},
-    {key:"logistics", label:"Tính Logistics"},
-    {key:"news", label:"Tin tức"},
-    {key:"rd", label:"Hợp tác R&D"},
-  ];
-
-  // --------- Dummy Data ---------
-  const CASE_STUDIES = [
-    { id:1, name:"Ao nuôi cá tra A1 - Cần Thơ", species:"Cá tra", areaHa:5, cycleDays:180, harvestTons:600, fcr:1.5, feedCostPerKg:12000, pricePerKg:25000, started:"2024-03-01", finished:"2024-08-30",
-      images:["https://images.unsplash.com/photo-1593262109328-154f3fb9d29f?q=80&w=1200&auto=format&fit=crop"],
-      video:"https://www.youtube.com/embed/1La4QzGeaaQ", ownerNote:"Thức ăn ổn định, tăng trưởng đồng đều, tỷ lệ sống cao." },
-    { id:2, name:"Rô phi siêu thâm canh - Long An", species:"Cá rô phi", areaHa:2.5, cycleDays:150, harvestTons:220, fcr:1.35, feedCostPerKg:11500, pricePerKg:32000, started:"2024-02-15", finished:"2024-07-20",
-      images:["https://images.unsplash.com/photo-1576765608610-5f4e01aa12c4?q=80&w=1200&auto=format&fit=crop"],
-      video:"https://www.youtube.com/embed/aqz-KE-bpKQ", ownerNote:"Tối ưu FCR, giảm hao hụt nhờ quản trị nước tốt." },
-    { id:3, name:"Cá lóc thương phẩm - An Giang", species:"Cá lóc", areaHa:1.2, cycleDays:120, harvestTons:95, fcr:1.6, feedCostPerKg:12500, pricePerKg:38000, started:"2024-04-10", finished:"2024-08-10",
-      images:["https://images.unsplash.com/photo-1517837016564-bfcf7a7c89d6?q=80&w=1200&auto=format&fit=crop"],
-      video:"https://www.youtube.com/embed/oUFJJNQGwhk", ownerNote:"Tăng trưởng nhanh, màu thịt đẹp, đầu ra ổn định." }
-  ];
-
-  const PDF_LIBRARY = [
-    { id:"pdf1", title:"Tối ưu FCR theo giai đoạn", species:"Cá tra", stage:"Tăng trưởng", goal:"Tối ưu chi phí",
-      url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-    { id:"pdf2", title:"Phòng bệnh thường gặp mùa mưa", species:"Cá rô phi", stage:"Phòng bệnh", goal:"An toàn sinh học",
-      url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-    { id:"pdf3", title:"Quản lý môi trường nước ao đất", species:"Cá lóc", stage:"Môi trường", goal:"Ổn định năng suất",
-      url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-    { id:"pdf4", title:"Tối ưu vòng quay vốn (360°)", species:"Cá tra", stage:"Tài chính", goal:"Tối ưu vốn",
-      url:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-  ];
-
-  const VIDEO_GALLERY = [
-    { id:"v1", title:"Flycam toàn cảnh nhà máy", src:"https://www.youtube.com/embed/1La4QzGeaaQ" },
-    { id:"v2", title:"Dây chuyền sản xuất tự động", src:"https://www.youtube.com/embed/aqz-KE-bpKQ" },
-    { id:"v3", title:"Kho lạnh & container xuất", src:"https://www.youtube.com/embed/oUFJJNQGwhk" },
-  ];
-
-  const WAREHOUSES = [
-    { id:"dc1", name:"Cần Thơ DC", region:"ĐBSCL", lat:10.045, lng:105.746 },
-    { id:"dc2", name:"Long An DC", region:"ĐBSCL", lat:10.695, lng:106.242 },
-    { id:"dc3", name:"Hồ Chí Minh Hub", region:"Miền Nam", lat:10.823, lng:106.629 },
-    { id:"dc4", name:"Nha Trang Node", region:"Miền Trung", lat:12.238, lng:109.196 },
-    { id:"dc5", name:"Hải Phòng Port", region:"Miền Bắc", lat:20.861, lng:106.683 },
-  ];
-
-  const DESTINATIONS = [
-    { id:"dst1", name:"An Giang (cá tra)", region:"ĐBSCL", lat:10.375, lng:105.420 },
-    { id:"dst2", name:"Bạc Liêu (tôm/cá)", region:"ĐBSCL", lat:9.294, lng:105.727 },
-    { id:"dst3", name:"Cà Mau (tôm/cá)", region:"ĐBSCL", lat:9.176, lng:105.152 },
-    { id:"dst4", name:"Quảng Nam (cá rô phi)", region:"Miền Trung", lat:15.573, lng:108.474 },
-    { id:"dst5", name:"Hải Dương (cá lóc)", region:"Miền Bắc", lat:20.938, lng:106.320 },
-  ];
-
-  const NEWS = [
-    { id:"n1", tag:"Giá nguyên liệu", title:"Bột cá ổn định, dầu đậu nành tăng nhẹ",
-      date:"2025-07-28", excerpt:"Giá dầu đậu nành tăng 2.1% do nguồn cung thắt chặt; bột cá giữ mức ổn định theo quý." },
-    { id:"n2", tag:"Xuất khẩu", title:"Nhu cầu thị trường Trung Đông tăng",
-      date:"2025-07-15", excerpt:"Các nhà nhập khẩu tăng đơn hàng dòng premium; yêu cầu chứng nhận truy xuất nguồn gốc." },
-    { id:"n3", tag:"Dịch bệnh", title:"Cảnh báo Vibrio vùng ven biển miền Trung",
-      date:"2025-06-30", excerpt:"Khuyến nghị tăng cường sát trùng, quản trị tảo, bổ sung probiotics giai đoạn chuyển mùa." },
-  ];
-
-  // --------- Utils ---------
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const fmtVND = n => (Math.round(n)).toLocaleString("vi-VN")+" ₫";
-  const ceil = Math.ceil;
-
-  // Haversine (km)
-  function distanceKm(a,b){
-    const toRad = d=>d*Math.PI/180, R=6371;
-    const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
-    const s1 = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
-    return 2*R*Math.atan2(Math.sqrt(s1), Math.sqrt(1-s1));
-  }
-  </script>
   <!-- App Script: SPA + Renderers -->
   <script>
   // --------- Navbar / Tabs ----------
@@ -442,21 +17,17 @@
   }
 
   function activateTab(key, scroll=false){
-    // toggle aria
     $$(".nav-btn").forEach(b=>{
       b.setAttribute("aria-current", b.dataset.tab===key ? "page" : "false");
     });
     navSelect.value = key;
-    // show section
     TABS.forEach(t=>{
       const el = $("#"+t.key);
       if(!el) return;
       el.style.display = t.key===key ? "" : "none";
     });
-    // update hash (SPA-ish)
     history.replaceState(null,"","#"+key);
     if(scroll){ window.scrollTo({top:0, behavior:"smooth"}); }
-    // lazy init map when opening
     if(key==="map"){ initMapOnce(); }
   }
 
@@ -490,7 +61,6 @@
         `;
         wrap.appendChild(card);
       });
-      // bind modal
       wrap.querySelectorAll("[data-open]").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const item = CASE_STUDIES.find(c=>c.id==btn.dataset.open);
@@ -500,6 +70,7 @@
     }
   }
 
+  // --------- Modal (PATCHED) ----------
   function openCaseModal(item){
     $("#mdTitle").textContent = item.name;
     $("#mdSub").textContent = `${item.species} • ${item.started} → ${item.finished}`;
@@ -507,8 +78,8 @@
     const feedCost = item.harvestTons*1000*item.fcr*item.feedCostPerKg;
     const net = revenue - feedCost; const roi = net/feedCost*100;
     $("#mdBody").innerHTML = `
-      <div class="grid" style="grid-template-columns:1fr 1fr;gap:0">
-        <div class="card" style="border:0;border-radius:0">
+      <div class="md-grid">
+        <div>
           <iframe title="Video - ${item.name}" class="thumb" style="border-radius:0"
             src="${item.video}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
@@ -531,11 +102,11 @@
         </div>
       </div>
     `;
-    $("#modal").hidden=false; $("#mdClose").focus();
+    $("#modal").hidden=false; $("#modal").classList.add("active"); $("#mdClose").focus();
   }
-  $("#mdClose").addEventListener("click", ()=> $("#modal").hidden=true);
-  $("#modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") $("#modal").hidden=true; });
-  document.addEventListener("keydown", e=>{ if(e.key==="Escape") $("#modal").hidden=true; });
+  $("#mdClose").addEventListener("click", ()=> { $("#modal").classList.remove("active"); $("#modal").hidden=true; });
+  $("#modal").addEventListener("click", (e)=>{ if(e.target.id==="modal"){ $("#modal").classList.remove("active"); $("#modal").hidden=true; }});
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ $("#modal").classList.remove("active"); $("#modal").hidden=true; }});
 
   // --------- PDF Library ----------
   function renderPDF(){
@@ -627,7 +198,7 @@
     mapInstance = L.map('map').setView([10.5,106],6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(mapInstance);
     layerGroup = L.layerGroup().addTo(mapInstance);
-    drawMap(); // initial
+    drawMap();
     $("#regionFilter").addEventListener("change", drawMap);
   }
   function drawMap(){
@@ -654,7 +225,6 @@
       e.preventDefault();
       const qty = Math.max(1, Number($("#qtyTon").value||0));
       const dest = DESTINATIONS.find(d=>d.id===destSel.value);
-      // nearest warehouse
       let best=null, bestD=Infinity;
       WAREHOUSES.forEach(w=>{ const d=distanceKm({lat:w.lat,lng:w.lng},{lat:dest.lat,lng:dest.lng}); if(d<bestD){bestD=d; best=w;} });
       const capacityPerContainerTon = 25;
@@ -704,21 +274,16 @@
 
   // --------- Init ----------
   function init(){
-    // build nav
     buildNav();
-    // render sections
     renderCaseStudies();
     renderPDF();
     renderVideos();
     renderDealer();
     renderLogistics();
     renderNews();
-    // activate tab from hash or default
     const start = location.hash?.replace("#","") || "home";
     activateTab(TABS.some(t=>t.key===start)?start:"home");
-    // quick goto buttons
     $$("[data-goto]").forEach(b=>b.addEventListener("click",()=>activateTab(b.dataset.goto,true)));
-    // footer year
     $("#year").textContent = new Date().getFullYear();
   }
   document.addEventListener("DOMContentLoaded", init);
